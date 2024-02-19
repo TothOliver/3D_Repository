@@ -24,7 +24,7 @@ private:
 
 	union
 	{
-		ID3D11VertexShader* vertex = nullptr;
+		ID3D11VertexShader* vertex;
 		ID3D11HullShader* hull;
 		ID3D11DomainShader* domain;
 		ID3D11GeometryShader* geometry;
@@ -37,14 +37,14 @@ private:
 public:
 	ShaderD3D11() = default;
 	~ShaderD3D11() = default;
-	ShaderD3D11(ID3D11Device* device, ShaderType shaderType, const void* dataPtr, size_t dataSize);
+	ShaderD3D11(ID3D11Device* device, ShaderType shaderType, const void* dataPtr, size_t dataSize, const char* csoPath);
 	ShaderD3D11(ID3D11Device* device, ShaderType shaderType, const char* csoPath);
 	ShaderD3D11(const ShaderD3D11& other) = delete;
 	ShaderD3D11& operator=(const ShaderD3D11& other) = delete;
 	ShaderD3D11(ShaderD3D11&& other) = delete;
 	ShaderD3D11& operator=(ShaderD3D11&& other) = delete;
 
-	void Initialize(ID3D11Device* device, ShaderType shaderType, const void* dataPtr, size_t dataSize);
+	void Initialize(ID3D11Device* device, ShaderType shaderType, const void* dataPtr, size_t dataSize, const char* csoPath);
 	void Initialize(ID3D11Device* device, ShaderType shaderType, const char* csoPath);
 
 	const void* GetShaderByteData() const;

@@ -141,6 +141,7 @@
     </ClCompile>
     <ClCompile Include="SamplerD3D11.cpp" />
     <ClCompile Include="ShaderD3D11.cpp" />
+    <ClCompile Include="ShaderLoader.cpp" />
     <ClCompile Include="ShaderResourceTextureD3D11.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
@@ -159,6 +160,7 @@
     </ClInclude>
     <ClInclude Include="SamplerD3D11.h" />
     <ClInclude Include="ShaderD3D11.h" />
+    <ClInclude Include="ShaderLoader.h" />
     <ClInclude Include="ShaderResourceTextureD3D11.h" />
     <ClInclude Include="SpotLightCollectionD3D11.h" />
     <ClInclude Include="stb_image.h" />

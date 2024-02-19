@@ -1,3 +1,5 @@
 ﻿  InputLayoutD3D11.cpp
-C:\Users\olto22\OneDrive - BTH Student\Documents\Program3D\3DProject\InputLayoutD3D11.cpp(18,70): warning C4267: 'argument': conversion from 'size_t' to 'UINT', possible loss of data
+C:\Users\olto22\OneDrive - BTH Student\Documents\Program3D\3DProject\InputLayoutD3D11.cpp(13,77): warning C4838: conversion from 'size_t' to 'UINT' requires a narrowing conversion
+C:\Users\olto22\OneDrive - BTH Student\Documents\Program3D\3DProject\InputLayoutD3D11.cpp(13,77): warning C4267: 'initializing': conversion from 'size_t' to 'UINT', possible loss of data
+C:\Users\olto22\OneDrive - BTH Student\Documents\Program3D\3DProject\InputLayoutD3D11.cpp(20,70): warning C4267: 'argument': conversion from 'size_t' to 'UINT', possible loss of data
   3DProject.vcxproj -> C:\Users\olto22\OneDrive - BTH Student\Documents\Program3D\3DProject\x64\Debug\3DProject.exe

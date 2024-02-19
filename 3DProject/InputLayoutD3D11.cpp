@@ -8,9 +8,11 @@ InputLayoutD3D11::~InputLayoutD3D11()
 
 void InputLayoutD3D11::AddInputElement(const std::string& semanticName, DXGI_FORMAT format)
 {
+	static size_t cap = 0;
 	this->semanticNames.push_back(semanticName);
-	D3D11_INPUT_ELEMENT_DESC newElement = {semanticName.c_str(), 0, format, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0};
-	this->elements.push_back(newElement);
+	D3D11_INPUT_ELEMENT_DESC newElement = {semanticName.c_str(), 0, format, 0, cap, D3D11_INPUT_PER_VERTEX_DATA, 0};
+	elements.push_back(newElement);
+	cap += 12;
 }
 
 void InputLayoutD3D11::FinalizeInputLayout(ID3D11Device* device, const void* vsDataPtr, size_t vsDataSize)

@@ -7,19 +7,29 @@
 #include "SubMeshD3D11.h"
 #include "VertexBufferD3D11.h"
 #include "IndexBufferD3D11.h"
-#include <vector>
 
 struct MeshData
 {
-	std::vector<float> vertexData;
-	std::vector<uint32_t> indexData;
-	float origin[3];
+	struct VertexInfo
+	{
+		size_t sizeOfVertex;
+		size_t nrOfVerticesInBuffer;
+		void* vertexData;
+	} vertexInfo;
+
+	struct IndexInfo
+	{
+		size_t nrOfIndicesInBuffer;
+		uint32_t* indexData;
+	} indexInfo;
 
 	struct SubMeshInfo
 	{
 		size_t startIndexValue;
 		size_t nrOfIndicesInSubMesh;
-		Material mat;
+		ID3D11ShaderResourceView* ambientTextureSRV;
+		ID3D11ShaderResourceView* diffuseTextureSRV;
+		ID3D11ShaderResourceView* specularTextureSRV;
 	};
 
 	std::vector<SubMeshInfo> subMeshInfo;
@@ -34,7 +44,6 @@ private:
 
 public:
 	MeshD3D11() = default;
-	MeshD3D11(ID3D11Device* &device, std::string filename, float origin[3]);
 	~MeshD3D11() = default;
 	MeshD3D11(const MeshD3D11 & other) = delete;
 	MeshD3D11& operator=(const MeshD3D11 & other) = delete;

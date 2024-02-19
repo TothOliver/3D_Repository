@@ -4,11 +4,13 @@
 
 #include "Window.h"
 #include "D3D11Helper.h"
-#include "CameraD3D11.h"
-#include "ShaderD3D11.h"
+//#include "ShaderD3D11.h"
+
+#include "ShaderLoader.h"
 #include "InputLayoutD3D11.h"
 #include "SamplerD3D11.h"
-//#include "RenderTargetD3D11.h"
+#include "ShaderResourceTextureD3D11.h"
+#include "CameraD3D11.h"
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
@@ -37,14 +39,21 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		return -1;
 	}
 
-	//CameraD3D11 camera;
-	InputLayoutD3D11 inputLayout;
-	ShaderD3D11 vertexShader;
 
-	vertexShader.Initialize(device, ShaderType::VERTEX_SHADER, "VertexShader.cso");
-	vertexShader.BindShader(immediateContext);
-	//camera.Initialize(device, { 1, float(16.0f / 9), 1, 4 });
-	inputLayout.AddInputElement("POSITION", DXGI_FORMAT_R32G32B32_FLOAT);
+	ShaderD3D11 vertexShader;
+	ShaderD3D11 pixelShader;
+	InputLayoutD3D11 inputLayout;
+	ShaderResourceTextureD3D11 srt;
+	SamplerD3D11 sampler;
+
+	std::string vShaderByteCode;
+
+	if (!ShaderLoader(device, immediateContext, vertexShader, pixelShader, inputLayout, srt, sampler))
+	{
+		std::cerr << "Error: SetupD3D11" << std::endl;
+		return -1;
+	}
+
 
 	while (!(GetKeyState(VK_ESCAPE) & 0x8000) && msg.message != WM_QUIT)
 	{
