@@ -134,14 +134,20 @@
     </ClCompile>
     <ClCompile Include="ConstantBufferD3D11.cpp" />
     <ClCompile Include="D3D11Helper.cpp" />
+    <ClCompile Include="IndexBufferD3D11.cpp" />
     <ClCompile Include="InputLayoutD3D11.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="MeshD3D11.cpp" />
+    <ClCompile Include="Parser.cpp" />
     <ClCompile Include="RenderTargetD3D11.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="SamplerD3D11.cpp" />
     <ClCompile Include="ShaderD3D11.cpp" />
+    <ClCompile Include="ShaderLoader.cpp" />
     <ClCompile Include="ShaderResourceTextureD3D11.cpp" />
+    <ClCompile Include="SubMeshD3D11.cpp" />
+    <ClCompile Include="VertexBufferD3D11.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -153,12 +159,15 @@
     <ClInclude Include="DepthBufferD3D11.h" />
     <ClInclude Include="IndexBufferD3D11.h" />
     <ClInclude Include="InputLayoutD3D11.h" />
+    <ClInclude Include="Material.h" />
     <ClInclude Include="MeshD3D11.h" />
+    <ClInclude Include="Parser.h" />
     <ClInclude Include="RenderTargetD3D11.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="SamplerD3D11.h" />
     <ClInclude Include="ShaderD3D11.h" />
+    <ClInclude Include="ShaderLoader.h" />
     <ClInclude Include="ShaderResourceTextureD3D11.h" />
     <ClInclude Include="SpotLightCollectionD3D11.h" />
     <ClInclude Include="stb_image.h" />
@@ -168,7 +177,16 @@
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="VertexShader.hlsl" />
+    <FxCompile Include="PixelShader.hlsl">
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
+    <FxCompile Include="VertexShader.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
