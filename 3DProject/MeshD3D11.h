@@ -8,12 +8,16 @@
 #include "VertexBufferD3D11.h"
 #include "IndexBufferD3D11.h"
 #include <vector>
+#include "ConstantBufferD3D11.h"
 
 struct MeshData
 {
 	std::vector<float> vertexData;
 	std::vector<uint32_t> indexData;
-	float origin[3];
+
+	float worldX;
+	float worldY;
+	float worldZ;
 
 	struct SubMeshInfo
 	{
@@ -31,10 +35,11 @@ private:
 	std::vector<SubMeshD3D11> subMeshes;
 	VertexBufferD3D11 vertexBuffer;
 	IndexBufferD3D11 indexBuffer;
+	ConstantBufferD3D11 worldMatrixBuffer;
 
 public:
 	MeshD3D11() = default;
-	MeshD3D11(ID3D11Device* &device, std::string filename, float origin[3]);
+	MeshD3D11(ID3D11Device* &device, std::string filename, float worldX = 0, float worldY = 0, float worldZ = 0);
 	~MeshD3D11() = default;
 	MeshD3D11(const MeshD3D11 & other) = delete;
 	MeshD3D11& operator=(const MeshD3D11 & other) = delete;

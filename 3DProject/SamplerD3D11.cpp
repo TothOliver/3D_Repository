@@ -7,7 +7,7 @@ SamplerD3D11::SamplerD3D11(ID3D11Device* device, D3D11_TEXTURE_ADDRESS_MODE adre
 
 SamplerD3D11::~SamplerD3D11()
 {
-	this->samplerState->Release();
+	//this->samplerState->Release();
 }
 
 void SamplerD3D11::Initialize(ID3D11Device* device, D3D11_TEXTURE_ADDRESS_MODE adressMode, std::optional<std::array<float, 4>> borderColour)

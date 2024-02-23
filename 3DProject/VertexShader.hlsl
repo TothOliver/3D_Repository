@@ -7,6 +7,7 @@ struct VertexShaderInput
 
 struct VertexShaderOutput
 {
+    float4 world_position : WORLD_POSITION;
 	float4 position : SV_POSITION;
     float3 normal : NORMAL;
     float2 uv : UV;
@@ -21,7 +22,8 @@ cbuffer wvp : register(b0)
 VertexShaderOutput main(VertexShaderInput input)
 {
 	VertexShaderOutput output;
-    output.position = mul(mul(float4(input.position, 1.0f), transpose(world_matrix)), transpose(vp_matrix));
+    output.world_position = mul(float4(input.position, 1.0f), transpose(world_matrix));
+    output.position = mul(output.world_position, transpose(vp_matrix));
     output.normal = input.normal;
     output.uv = input.uv;
 	return output;

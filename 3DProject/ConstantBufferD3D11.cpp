@@ -7,7 +7,7 @@ ConstantBufferD3D11::ConstantBufferD3D11(ID3D11Device* device, size_t byteSize, 
 
 ConstantBufferD3D11::~ConstantBufferD3D11()
 {
-	this->buffer->Release();
+	//this->buffer->Release();
 }
 
 ConstantBufferD3D11::ConstantBufferD3D11(ConstantBufferD3D11&& other) noexcept
@@ -20,10 +20,9 @@ ConstantBufferD3D11::ConstantBufferD3D11(ConstantBufferD3D11&& other) noexcept
 void ConstantBufferD3D11::Initialize(ID3D11Device* device, size_t byteSize, void* initialData)
 {
 	ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
-	mappedResource.RowPitch = sizeof(DirectX::XMFLOAT4X4);
+	mappedResource.RowPitch = byteSize;
 	
-	this->bufferSize = GetSize();
-	this->buffer = GetBuffer();
+	this->bufferSize = byteSize;
 
 	D3D11_BUFFER_DESC cameraBufferDesc;
 	cameraBufferDesc.ByteWidth = byteSize;

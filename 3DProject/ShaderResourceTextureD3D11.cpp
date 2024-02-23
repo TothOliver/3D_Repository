@@ -1,5 +1,4 @@
 #include "ShaderResourceTextureD3D11.h"
-#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 
@@ -14,8 +13,8 @@ ShaderResourceTextureD3D11::ShaderResourceTextureD3D11(ID3D11Device* device, con
 
 ShaderResourceTextureD3D11::~ShaderResourceTextureD3D11()
 {
-	this->texture->Release();
-	this->srv->Release();
+	//this->texture->Release();
+	//this->srv->Release();
 }
 
 void ShaderResourceTextureD3D11::Initialize(ID3D11Device* device, UINT width, UINT height, void* textureData)
@@ -50,6 +49,7 @@ void ShaderResourceTextureD3D11::Initialize(ID3D11Device* device, const char* pa
 	texture.MiscFlags = 0;
 
 	device->CreateTexture2D(&texture, &imagedata, &this->texture);
+
 	if(this->texture != 0)
 		device->CreateShaderResourceView(this->texture, nullptr, &srv);
 }
