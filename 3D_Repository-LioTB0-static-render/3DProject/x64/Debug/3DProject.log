@@ -1,0 +1,20 @@
+﻿  Main.cpp
+C:\Users\olto22\OneDrive - BTH Student\Documents\Program3D\3D_Repository-LioTB0-static-render\3DProject\Main.cpp(109,34): warning C4267: '=': conversion from 'size_t' to 'UINT', possible loss of data
+C:\Users\olto22\OneDrive - BTH Student\Documents\Program3D\3D_Repository-LioTB0-static-render\3DProject\Main.cpp(160,24): warning C4244: 'initializing': conversion from 'LONG' to 'float', possible loss of data
+C:\Users\olto22\OneDrive - BTH Student\Documents\Program3D\3D_Repository-LioTB0-static-render\3DProject\Main.cpp(161,24): warning C4244: 'initializing': conversion from 'LONG' to 'float', possible loss of data
+C:\Users\olto22\OneDrive - BTH Student\Documents\Program3D\3D_Repository-LioTB0-static-render\3DProject\Main.cpp(164,43): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\olto22\OneDrive - BTH Student\Documents\Program3D\3D_Repository-LioTB0-static-render\3DProject\Main.cpp(167,43): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\olto22\OneDrive - BTH Student\Documents\Program3D\3D_Repository-LioTB0-static-render\3DProject\Main.cpp(170,46): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\olto22\OneDrive - BTH Student\Documents\Program3D\3D_Repository-LioTB0-static-render\3DProject\Main.cpp(174,46): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\olto22\OneDrive - BTH Student\Documents\Program3D\3D_Repository-LioTB0-static-render\3DProject\Main.cpp(192,28): warning C4305: 'initializing': truncation from 'double' to 'float'
+C:\Users\olto22\OneDrive - BTH Student\Documents\Program3D\3D_Repository-LioTB0-static-render\3DProject\Main.cpp(192,33): warning C4305: 'initializing': truncation from 'double' to 'float'
+C:\Users\olto22\OneDrive - BTH Student\Documents\Program3D\3D_Repository-LioTB0-static-render\3DProject\Main.cpp(192,38): warning C4305: 'initializing': truncation from 'double' to 'float'
+C:\Users\olto22\OneDrive - BTH Student\Documents\Program3D\3D_Repository-LioTB0-static-render\3DProject\Main.cpp(211,41): warning C4267: 'argument': conversion from 'size_t' to 'UINT', possible loss of data
+C:\Users\olto22\OneDrive - BTH Student\Documents\Program3D\3D_Repository-LioTB0-static-render\3DProject\Main.cpp(122,27): warning C4101: 'mappedResource': unreferenced local variable
+C:\Users\olto22\OneDrive - BTH Student\Documents\Program3D\3D_Repository-LioTB0-static-render\3DProject\Main.cpp(250,23): warning C4244: 'initializing': conversion from 'LONG' to 'float', possible loss of data
+C:\Users\olto22\OneDrive - BTH Student\Documents\Program3D\3D_Repository-LioTB0-static-render\3DProject\Main.cpp(251,23): warning C4244: 'initializing': conversion from 'LONG' to 'float', possible loss of data
+C:\Users\olto22\OneDrive - BTH Student\Documents\Program3D\3D_Repository-LioTB0-static-render\3DProject\Main.cpp(254,42): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\olto22\OneDrive - BTH Student\Documents\Program3D\3D_Repository-LioTB0-static-render\3DProject\Main.cpp(257,42): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\olto22\OneDrive - BTH Student\Documents\Program3D\3D_Repository-LioTB0-static-render\3DProject\Main.cpp(260,45): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\olto22\OneDrive - BTH Student\Documents\Program3D\3D_Repository-LioTB0-static-render\3DProject\Main.cpp(264,45): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+  3DProject.vcxproj -> C:\Users\olto22\OneDrive - BTH Student\Documents\Program3D\3D_Repository-LioTB0-static-render\3DProject\x64\Debug\3DProject.exe
