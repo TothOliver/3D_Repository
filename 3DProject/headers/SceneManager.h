@@ -15,4 +15,4 @@ public:
 	void AddObject(MeshD3D11*& object);
 };
 
-int CreateScenes(ID3D11Device* device, std::vector<Scene*>& scenes);
+int CreateScenes(ID3D11Device* device, std::vector<Scene>& scenes);

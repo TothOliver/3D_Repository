@@ -9,7 +9,9 @@ class SubMeshD3D11
 private:
 	size_t startIndex = 0;
 	size_t nrOfIndices = 0;
+
 	Material mat;
+
 	float specularExponent = 1;
 
 public:
@@ -17,7 +19,7 @@ public:
 	~SubMeshD3D11();
 	SubMeshD3D11(const SubMeshD3D11& other) = default;
 	SubMeshD3D11& operator=(const SubMeshD3D11& other) = default;
-	SubMeshD3D11(SubMeshD3D11&& other) noexcept;
+	SubMeshD3D11(SubMeshD3D11&& other) = default;
 	SubMeshD3D11& operator=(SubMeshD3D11&& other) = default;
 
 	void Initialize(size_t startIndexValue, size_t nrOfIndicesInSubMesh,

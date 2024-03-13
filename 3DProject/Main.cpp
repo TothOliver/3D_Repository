@@ -1,6 +1,6 @@
 #pragma once
 
-#include <windows.h>
+#include <Windows.h>
 #include <iostream>
 #include <d3d11.h>
 
@@ -10,26 +10,20 @@
 #include "headers/ShaderLoader.h"
 #include "headers/InputLayoutD3D11.h"
 #include "headers/SamplerD3D11.h"
-
 #include "headers/CameraD3D11.h"
 #include "headers/GBuffer.h"
-
-#include "headers/DepthBufferD3D11.h"
-#include "headers/SpotLightCollectionD3D11.h"
 
 #include "headers/Parser.h"
 #include "headers/SceneManager.h"
 #include <DirectXMath.h>
-#include <dxgidebug.h>
 
-#define CAMERA_SPEED 0.02f
+#define CAMERA_SPEED 0.002f
 #define CAMERA_ROTATION_SPEED 0.002
 
 using namespace DirectX;
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
-
 	const UINT WIDTH = 1024;
 	const UINT HEIGHT = 576;
 	HWND window;
@@ -57,45 +51,58 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		return -1;
 	}
 
-
 	GBuffer positionBuffer(device, WIDTH, HEIGHT);
 	GBuffer normalBuffer(device, WIDTH, HEIGHT);
-	ID3D11RenderTargetView* rtv[2];
-	ID3D11ShaderResourceView* srv[2];
+	GBuffer ambientBuffer(device, WIDTH, HEIGHT);
+	GBuffer diffuseBuffer(device, WIDTH, HEIGHT);
+	GBuffer specularBuffer(device, WIDTH, HEIGHT);
+
+	ID3D11RenderTargetView* rtv[5];
+	ID3D11ShaderResourceView* srv[5];
 	rtv[0] = positionBuffer.GetRTV();
 	rtv[1] = normalBuffer.GetRTV();
+	rtv[2] = ambientBuffer.GetRTV();
+	rtv[3] = diffuseBuffer.GetRTV();
+	rtv[4] = specularBuffer.GetRTV();
+
 	srv[0] = positionBuffer.GetSRV();
 	srv[1] = normalBuffer.GetSRV();
+	srv[2] = ambientBuffer.GetSRV();
+	srv[3] = diffuseBuffer.GetSRV();
+	srv[4] = specularBuffer.GetSRV();
 
+	ID3D11RenderTargetView* RTVnull[5];
+	ID3D11ShaderResourceView* SRVnull[5];
+	RTVnull[0] = nullptr;
+	RTVnull[1] = nullptr;
+	RTVnull[2] = nullptr;
+	RTVnull[3] = nullptr;
+	RTVnull[4] = nullptr;
+
+	SRVnull[0] = nullptr;
+	SRVnull[1] = nullptr;
+	SRVnull[2] = nullptr;
+	SRVnull[3] = nullptr;
+	SRVnull[4] = nullptr;
+
+	
 	ShaderD3D11 vertexShader;
 	ShaderD3D11 computeShader;
 	ShaderD3D11 pixelShader;
 	InputLayoutD3D11 inputLayout;
 	SamplerD3D11 sampler;
 	std::string vShaderByteCode;
-	ID3D11SamplerState* sState = {};
-
+	
 
 	//Initialize camera with desired values
 	CameraD3D11 camera;
-	camera.Initialize(device, { 1, (float)16 / 9, 1, 100 }, { 0, 0, -10.0f });
-
-	SpotLightCollectionD3D11 spotLightCollection;
-	SpotLightData sld = {};
+	camera.Initialize(device, { 1, (float)16 / 9, 0.05, 100 }, { 0, 0, -10.0f });
 
 	//Create variables for storing mouse input information and more
 	ID3D11Buffer* vpBuffer;
 	POINT p;
 	RECT rect;
 	LPRECT lpRect = &rect;
-
-	ID3D11RenderTargetView* RTVnull[2];
-	ID3D11ShaderResourceView* SRVnull[2];
-	RTVnull[0] = nullptr;
-	RTVnull[1] = nullptr;
-	SRVnull[0] = nullptr;
-	SRVnull[1] = nullptr;
-
 	ShowCursor(false);
 
 	if (!ShaderLoader(device, immediateContext, vertexShader, computeShader, pixelShader, inputLayout, sampler))
@@ -104,7 +111,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		return -1;
 	}
 
-	std::vector<Scene*> scenes;
+	std::vector<Scene> scenes;
 	CreateScenes(device, scenes);
 	int sceneIndex = 0;
 
@@ -163,6 +170,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 			}
 			else if (p.y < windowCenterY - 2)
 			{
+
 				camera.RotateRight((p.y - windowCenterY) * CAMERA_ROTATION_SPEED);
 			}
 
@@ -172,23 +180,25 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		//Updating camera position
 		camera.UpdateInternalConstantBuffer(immediateContext);
 
+		vpBuffer = camera.GetVPBuffer();
 
-		vpBuffer = camera.GetConstantBuffer();
-		ID3D11Buffer* lightcameraBuffer;
-		lightcameraBuffer = spotLightCollection.GetLightCameraConstantBuffer(0);
 		immediateContext->VSSetConstantBuffers(1, 1, &vpBuffer);
-		immediateContext->PSSetConstantBuffers(1, 1, &lightcameraBuffer);
+
 
 		immediateContext->ClearRenderTargetView(rtv[0], clear);
 		immediateContext->ClearRenderTargetView(rtv[1], clear);
+		immediateContext->ClearRenderTargetView(rtv[2], clear);
+		immediateContext->ClearRenderTargetView(rtv[3], clear);
+		immediateContext->ClearRenderTargetView(rtv[4], clear);
+
 		immediateContext->ClearUnorderedAccessViewFloat(uav, clearColour);
 		immediateContext->ClearDepthStencilView(dsView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
 		
 		immediateContext->IASetInputLayout(inputLayout.GetInputLayout());
 		immediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		sState = sampler.GetSamplerState();
-		immediateContext->CSSetSamplers(0, 1, &sState);
+		ID3D11SamplerState* sState = sampler.GetSamplerState();
+		immediateContext->PSSetSamplers(0, 1, &sState);
 
 		vertexShader.BindShader(immediateContext);
 
@@ -196,22 +206,25 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 		pixelShader.BindShader(immediateContext);
 
-		immediateContext->OMSetRenderTargets(2, rtv, dsView);
+		immediateContext->OMSetRenderTargets(5, rtv, dsView);
 
-		if (scenes.size() == 0)
-			break;
 
-		scenes.at(sceneIndex)->DrawScene(immediateContext);
+		scenes.at(sceneIndex).DrawScene(immediateContext);
 
-		immediateContext->OMSetRenderTargets(2, RTVnull, nullptr);
+		
 
-		immediateContext->CSSetShaderResources(0, 2, srv);
+		immediateContext->OMSetRenderTargets(5, RTVnull, nullptr);
+
+		immediateContext->CSSetShaderResources(0, 5, srv);
 		immediateContext->CSSetUnorderedAccessViews(0, 1, &uav, nullptr);
 
 		computeShader.BindShader(immediateContext);
 		immediateContext->Dispatch(WIDTH / 8, HEIGHT / 8, 1);
 
-		immediateContext->CSSetShaderResources(0, 2, SRVnull);
+		immediateContext->CSSetShaderResources(0, 5, SRVnull);
+
+		ID3D11Buffer* cameraPosition = camera.GetPositionBuffer();
+		immediateContext->CSSetConstantBuffers(0, 1, &cameraPosition);
 
 
 		if ((GetAsyncKeyState(0x31) & 0x0101)) //1 key
@@ -233,12 +246,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	swapChain->Release();
 	dsTexture->Release();
 	dsView->Release();
-	uav->Release();
-
-	for (size_t i = 0; i < scenes.size(); i++)
-	{
-		scenes.at(i)->~Scene();
-	}
 
 	return true;
 }

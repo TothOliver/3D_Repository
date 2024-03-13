@@ -4,6 +4,7 @@
 #include "headers/Parser.h"
 #include <fstream>
 #include <iostream>
+#include <DirectXMath.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "headers/stb_image.h"
@@ -13,6 +14,10 @@
 #define PATH "assets/"
 #define DEFAULT "default.png"
 #define CONCAT(first, second) first second
+#define VERTEX_SIZE 11
+#define TANGENT_LOCAL_INDEX 6
+
+using namespace DirectX;
 
 void FillTexDesc(D3D11_TEXTURE2D_DESC &texDesc, int height, int width)
 //Fills a texture2d description for creating a texture
@@ -57,7 +62,6 @@ ID3D11ShaderResourceView* CreateSRV(ID3D11Device* &device, unsigned char* imageD
 	if (FAILED(hr))
 		return nullptr;
 
-	texture->Release();
 	return srv;
 }
 
@@ -88,16 +92,55 @@ void CreateDefaultMat(ID3D11Device*& device, Material& newMat)
 	newMat.specularExponent = 10;
 }
 
-int ParseObj(ID3D11Device* &device, std::string filename, std::vector<float>& vertexbuffer, std::vector<uint32_t>& indexbuffer, std::vector<SubMeshD3D11*>& submeshes, std::vector<Material>& materials)
+void InsertTangents(std::vector<float>& verticies)
+{
+	//Calculate tangent for each face
+	for (size_t i = 0; i < verticies.size() / VERTEX_SIZE - 2; i += 3)
+	{
+		int vertexIndex = i * VERTEX_SIZE;
+
+		//Triangle side V1-V0
+		XMVECTOR deltaPOS1 = XMVectorSubtract(XMVECTOR({verticies.at(vertexIndex + VERTEX_SIZE), verticies.at(vertexIndex + VERTEX_SIZE + 1), verticies.at(vertexIndex + VERTEX_SIZE + 2), 1.0f}), XMVECTOR({verticies.at(i), verticies.at(vertexIndex + 1), verticies.at(vertexIndex + 2), 1.0f }));
+
+		//Triangle side V2-V0
+		XMVECTOR deltaPOS2 = XMVectorSubtract(XMVECTOR({verticies.at(vertexIndex+ 2 * VERTEX_SIZE), verticies.at(vertexIndex+ 2 * VERTEX_SIZE + 1), verticies.at(vertexIndex+ 2 * VERTEX_SIZE + 2), 1.0f }), XMVECTOR({verticies.at(i), verticies.at(vertexIndex+ 1), verticies.at(vertexIndex + 2), 1.0f }));
+
+		//UV coordinate side UV1 - UV0
+		XMFLOAT2 deltaUV1;
+		XMStoreFloat2(&deltaUV1, XMVectorSubtract(XMVECTOR({ verticies.at(vertexIndex + VERTEX_SIZE + 9), verticies.at(vertexIndex + VERTEX_SIZE + 10), 0, 0 }), XMVECTOR({ verticies.at(vertexIndex + 9), verticies.at(vertexIndex + 10), 0, 0 })));
+
+		//UV coordinate side UV2 - UV0
+		XMFLOAT2 deltaUV2;
+		XMStoreFloat2(&deltaUV2, XMVectorSubtract(XMVECTOR({verticies.at(vertexIndex + 2 * VERTEX_SIZE + 9), verticies.at(vertexIndex + 2 * VERTEX_SIZE + 10), 0, 0}), XMVECTOR({verticies.at(vertexIndex + 9), verticies.at(vertexIndex + 10), 0, 0})));
+		
+		float r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+		XMFLOAT4 tangent;
+		XMStoreFloat4(&tangent, r * (deltaPOS1 * deltaUV2.y - deltaPOS2 * deltaUV1.y));
+		
+		for (size_t n = 0; n < 3; n++)
+		{
+			verticies.at(vertexIndex + n * VERTEX_SIZE + TANGENT_LOCAL_INDEX) = tangent.x;
+			verticies.at(vertexIndex + n * VERTEX_SIZE + TANGENT_LOCAL_INDEX + 1) = tangent.y;
+			verticies.at(vertexIndex + n * VERTEX_SIZE + TANGENT_LOCAL_INDEX + 2) = tangent.z;
+		}
+		
+
+	}
+}
+
+int ParseObj(ID3D11Device* &device, std::string filename, std::vector<float>& vertexbuffer, std::vector<uint32_t>& indexbuffer, std::vector<SubMeshD3D11>& submeshes)
 //Parses OBJ file and its MTL file if it exists
 {
 	stbi_set_flip_vertically_on_load(true);
 	
-	std::vector<float> verticies;
+	std::vector<float> positions;
 	std::vector<float> normals;
 	std::vector<float> uvCoordinates;
 	std::vector<int> uvIndicies;
 	std::vector<int> normalIndicies;
+
+	std::vector<Material> materials;
 
 	std::string currentMat = "default";
 	size_t subMeshStartIndex = 0;
@@ -115,18 +158,18 @@ int ParseObj(ID3D11Device* &device, std::string filename, std::vector<float>& ve
 
 	while (std::getline(file, line))
 	{
-		//Verticies
+		//positions
 		if (line.substr(0, 2) == "v ")
 		{
 			//Find index of seperator between first and second value
 			size_t index1 = line.find(' ', 2);
-			verticies.push_back(std::stof(line.substr(2, index1 - 2)));
+			positions.push_back(std::stof(line.substr(2, index1 - 2)));
 
 			//Find index of seperator between second and third value
 			size_t index2 = line.find(' ', index1 + 1);
-			verticies.push_back(std::stof(line.substr(index1, index2 - index1)));
+			positions.push_back(std::stof(line.substr(index1, index2 - index1)));
 			
-			verticies.push_back(std::stof(line.substr(index2, line.length() - index2)));
+			positions.push_back(std::stof(line.substr(index2, line.length() - index2)));
 		}
 
 		//Verticy Normals
@@ -160,11 +203,11 @@ int ParseObj(ID3D11Device* &device, std::string filename, std::vector<float>& ve
 		{
 			std::string xyz[3];
 
-			//Find index of seperator between first and second value substring
+			//Find index of separator between first and second value substring
 			size_t pos1 = line.find(' ', 2);
 			xyz[0] = line.substr(2, pos1 - 2);
 
-			//Find index of seperator between second and third value substring
+			//Find index of separator between second and third value substring
 			size_t pos2 = line.find(' ', pos1 + 1);
 			xyz[1] = line.substr(pos1, pos2 - pos1);
 
@@ -172,12 +215,12 @@ int ParseObj(ID3D11Device* &device, std::string filename, std::vector<float>& ve
 
 			for (size_t i = 0; i < 3; i++)
 			{
-				//Find index of seperator between first and second value
+				//Find index of separator between first and second value
 				pos1 = xyz[i].find('/');
 
 				indexbuffer.push_back(std::stoi(xyz[i].substr(0, pos1)) - 1);
 
-				//Find index of seperator between second and third value
+				//Find index of separator between second and third value
 				pos2 = xyz[i].find('/', pos1 + 1);
 
 				uvIndicies.push_back(std::stoi(xyz[i].substr(pos1 + 1, pos2 - pos1 - 1)) - 1);
@@ -197,13 +240,12 @@ int ParseObj(ID3D11Device* &device, std::string filename, std::vector<float>& ve
 				for (size_t i = 0; i < materials.size(); i++)
 					if (currentMat == materials.at(i).name)
 					{
-						SubMeshD3D11* subMesh = new SubMeshD3D11(materials.at(i), subMeshStartIndex, subMeshNrOfIndicies);
-						submeshes.push_back(subMesh);
+						submeshes.push_back(SubMeshD3D11(materials.at(i), subMeshStartIndex, subMeshNrOfIndicies));
 						break;
 					}
 
 			currentMat = line.substr(7, line.length() - 7);
-			subMeshStartIndex = 0;
+			subMeshStartIndex = indexbuffer.size() - 1;
 			subMeshNrOfIndicies = 0;
 		}
 
@@ -222,8 +264,7 @@ int ParseObj(ID3D11Device* &device, std::string filename, std::vector<float>& ve
 		for (size_t i = 0; i < materials.size(); i++)
 			if (currentMat == materials.at(i).name)
 			{
-				SubMeshD3D11* subMesh = new SubMeshD3D11(materials.at(i), subMeshStartIndex, subMeshNrOfIndicies);
-				submeshes.push_back(subMesh);
+				submeshes.push_back(SubMeshD3D11(materials.at(i), subMeshStartIndex, subMeshNrOfIndicies));
 				break;
 			}
 	}
@@ -231,17 +272,15 @@ int ParseObj(ID3D11Device* &device, std::string filename, std::vector<float>& ve
 	{
 		Material defaultMat;
 		CreateDefaultMat(device, defaultMat);
-		SubMeshD3D11* subMesh = new SubMeshD3D11(defaultMat, 0, indexbuffer.size());
-		submeshes.push_back(subMesh);
-		materials.push_back(defaultMat);
+		submeshes.push_back(SubMeshD3D11(defaultMat, 0, indexbuffer.size()));
 	}
 
 	//Filling the vertexbuffer according to input layout
 	for (size_t i = 0; i < indexbuffer.size(); i++)
 	{
-		vertexbuffer.push_back(verticies.at(indexbuffer.at(i) * 3));
-		vertexbuffer.push_back(verticies.at(indexbuffer.at(i) * 3 + 1));
-		vertexbuffer.push_back(verticies.at(indexbuffer.at(i) * 3 + 2));
+		vertexbuffer.push_back(positions.at(indexbuffer.at(i) * 3));
+		vertexbuffer.push_back(positions.at(indexbuffer.at(i) * 3 + 1));
+		vertexbuffer.push_back(positions.at(indexbuffer.at(i) * 3 + 2));
 
 		if (!normals.empty())
 		{
@@ -251,10 +290,15 @@ int ParseObj(ID3D11Device* &device, std::string filename, std::vector<float>& ve
 		}
 		else
 		{
-			vertexbuffer.push_back(verticies.at(indexbuffer.at(i) * 3));
-			vertexbuffer.push_back(verticies.at(indexbuffer.at(i) * 3 + 1));
-			vertexbuffer.push_back(verticies.at(indexbuffer.at(i) * 3 + 2));
+			vertexbuffer.push_back(positions.at(indexbuffer.at(i) * 3));
+			vertexbuffer.push_back(positions.at(indexbuffer.at(i) * 3 + 1));
+			vertexbuffer.push_back(positions.at(indexbuffer.at(i) * 3 + 2));
 		}
+
+		//Create space for tangents
+		vertexbuffer.push_back(0);
+		vertexbuffer.push_back(0);
+		vertexbuffer.push_back(0);
 
 		if (!uvCoordinates.empty())
 		{
@@ -263,11 +307,16 @@ int ParseObj(ID3D11Device* &device, std::string filename, std::vector<float>& ve
 		}
 		else
 		{
+			//Empty uv coordinates
 			vertexbuffer.push_back(0);
 			vertexbuffer.push_back(0);
 		}
 		
 	}
+
+	//Tangents are left empty is UV coordinates do not exist
+	if (!uvCoordinates.empty())
+		InsertTangents(vertexbuffer);
 
 	return 0;
 }
