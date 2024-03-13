@@ -8,8 +8,7 @@ ConstantBufferD3D11::ConstantBufferD3D11(ID3D11Device* device, size_t byteSize, 
 
 ConstantBufferD3D11::~ConstantBufferD3D11()
 {
-	if(this->buffer != nullptr)
-		this->buffer->Release();
+	//this->buffer->Release();
 }
 
 ConstantBufferD3D11::ConstantBufferD3D11(ConstantBufferD3D11&& other) noexcept
@@ -30,7 +29,7 @@ void ConstantBufferD3D11::Initialize(ID3D11Device* device, size_t byteSize, void
 	constBufferDesc.ByteWidth = byteSize;
 	constBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 	constBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	constBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	constBufferDesc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
 	constBufferDesc.MiscFlags = 0;
 	constBufferDesc.StructureByteStride = 0;
 

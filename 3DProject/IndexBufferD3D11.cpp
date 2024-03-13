@@ -9,8 +9,7 @@ IndexBufferD3D11::IndexBufferD3D11(ID3D11Device* device, size_t nrOfIndicesInBuf
 
 IndexBufferD3D11::~IndexBufferD3D11()
 {
-	if (this->buffer != nullptr)
-		this->buffer->Release();
+	this->buffer->Release();
 }
 
 void IndexBufferD3D11::Initialize(ID3D11Device* device, size_t nrOfIndicesInBuffer, uint32_t* indexData)

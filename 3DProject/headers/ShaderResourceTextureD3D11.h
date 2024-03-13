@@ -1,7 +1,6 @@
 #pragma once
 
 #include <d3d11_4.h>
-#include <iostream>
 
 class ShaderResourceTextureD3D11
 {
@@ -11,7 +10,7 @@ private:
 
 public:
 	ShaderResourceTextureD3D11() = default;
-	ShaderResourceTextureD3D11(ID3D11Device* device, UINT width, UINT height, ID3D11Texture2D* texture);
+	ShaderResourceTextureD3D11(ID3D11Device* device, UINT width, UINT height, void* textureData);
 	ShaderResourceTextureD3D11(ID3D11Device* device, const char* pathToTextureFile);
 	~ShaderResourceTextureD3D11();
 	ShaderResourceTextureD3D11(const ShaderResourceTextureD3D11& other) = delete;
@@ -19,9 +18,8 @@ public:
 	ShaderResourceTextureD3D11(ShaderResourceTextureD3D11&& other) = delete;
 	ShaderResourceTextureD3D11& operator=(ShaderResourceTextureD3D11&& other) = delete;
 
-	void Initialize(ID3D11Device* device, UINT width, UINT height, ID3D11Texture2D* texture);
+	void Initialize(ID3D11Device* device, UINT width, UINT height, void* textureData);
 	void Initialize(ID3D11Device* device, const char* pathToTextureFile);
 
 	ID3D11ShaderResourceView* GetSRV() const;
-	ID3D11Texture2D* GetTEXT() const;
 };

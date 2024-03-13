@@ -1,5 +1,0 @@
-﻿  MeshD3D11.cpp
-D:\3D_Repository-main\3DProject\MeshD3D11.cpp(13,95): warning C4267: 'argument': conversion from 'size_t' to 'UINT', possible loss of data
-  SubMeshD3D11.cpp
-  Generating Code...
-  3DProject.vcxproj -> D:\3D_Repository-main\3DProject\x64\Debug\3DProject.exe

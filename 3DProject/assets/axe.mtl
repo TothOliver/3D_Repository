@@ -3,6 +3,7 @@
 
 newmtl material
 map_Ka axe.jpg
+norm axe norm.jpg
 Ns 250.000000
 Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000

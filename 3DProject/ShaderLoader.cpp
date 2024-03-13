@@ -14,17 +14,10 @@ bool CreateInputLayout(InputLayoutD3D11& inputLayout, ID3D11Device* device, Shad
 {
     inputLayout.AddInputElement("POSITION", DXGI_FORMAT_R32G32B32_FLOAT);
     inputLayout.AddInputElement("NORMAL", DXGI_FORMAT_R32G32B32_FLOAT);
+    inputLayout.AddInputElement("TANGENT", DXGI_FORMAT_R32G32B32_FLOAT);
     inputLayout.AddInputElement("UV", DXGI_FORMAT_R32G32_FLOAT);
     inputLayout.FinalizeInputLayout(device, vertexShader.GetShaderByteData(), vertexShader.GetShaderByteSize());
     
-    return true;
-}
-
-bool CreateTexture(ID3D11Device* device, ShaderResourceTextureD3D11& srt)
-{
-    const char* pathToTexture = "default.png";
-    srt.Initialize(device, pathToTexture);
-
     return true;
 }
 
@@ -43,7 +36,7 @@ bool ShaderLoader(ID3D11Device* device, ID3D11DeviceContext* context, ShaderD3D1
 
     CreateShaders(device, context, vertexShader, computeShader, pixelShader, inputLayout);
     CreateInputLayout(inputLayout, device, vertexShader);
-
+    //CreateTexture(device, srt);
     CreateSampler(device, sampler);
 
     return true;

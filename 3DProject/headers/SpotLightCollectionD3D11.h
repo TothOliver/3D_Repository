@@ -25,9 +25,8 @@ struct SpotLightData
 		float projectionNearZ = 0.0f;
 		float projectionFarZ = 0.0f;
 		DirectX::XMFLOAT3 initialPosition;
-		DirectX::XMFLOAT3 intensity;
 	};
-	
+
 	std::vector<PerLightInfo> perLightInfo;
 };
 
@@ -41,7 +40,6 @@ private:
 		DirectX::XMFLOAT3 direction;
 		float angle = 0.0f;
 		DirectX::XMFLOAT3 position;
-		DirectX::XMFLOAT3 intensity;
 	};
 
 	std::vector<LightBuffer> bufferData;
@@ -58,8 +56,7 @@ public:
 	SpotLightCollectionD3D11(SpotLightCollectionD3D11&& other) = delete;
 	SpotLightCollectionD3D11& operator=(DepthBufferD3D11 && other) = delete;
 
-	void InitializeLightSource(ID3D11Device* device, const SpotLightData& lightInfo);
-	void InitializeStructuredBuffer(ID3D11Device* device);
+	void Initialize(ID3D11Device* device, const SpotLightData& lightInfo);
 
 	void UpdateLightBuffers(ID3D11DeviceContext* context);
 

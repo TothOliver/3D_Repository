@@ -4,6 +4,7 @@
 newmtl lambert1
 Ns 200.000000
 map_Ka rat_low_lambert1_BaseMap.png
+norm rat_low_lambert1_Normal.png
 Ni 1.450000
 d 1.000000
 illum 2
