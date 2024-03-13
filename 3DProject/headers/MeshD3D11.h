@@ -14,25 +14,19 @@ struct MeshData
 {
 	std::vector<float> vertexData;
 	std::vector<uint32_t> indexData;
+	std::vector<Material> materials;
 
-	float worldX;
-	float worldY;
-	float worldZ;
+	float worldX = 0;
+	float worldY = 0;
+	float worldZ = 0;
 
-	struct SubMeshInfo
-	{
-		size_t startIndexValue;
-		size_t nrOfIndicesInSubMesh;
-		Material mat;
-	};
-
-	std::vector<SubMeshInfo> subMeshInfo;
 };
 
 class MeshD3D11
 {
 private:
-	std::vector<SubMeshD3D11> subMeshes;
+	MeshData mData;
+	std::vector<SubMeshD3D11*> subMeshes;
 	VertexBufferD3D11 vertexBuffer;
 	IndexBufferD3D11 indexBuffer;
 	ConstantBufferD3D11 worldMatrixBuffer;
@@ -40,7 +34,7 @@ private:
 public:
 	MeshD3D11() = default;
 	MeshD3D11(ID3D11Device* &device, std::string filename, float worldX = 0, float worldY = 0, float worldZ = 0, float scale = 1);
-	~MeshD3D11() = default;
+	~MeshD3D11();
 	MeshD3D11(const MeshD3D11 & other) = delete;
 	MeshD3D11& operator=(const MeshD3D11 & other) = delete;
 	MeshD3D11(MeshD3D11 && other) = delete;

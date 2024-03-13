@@ -111,7 +111,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		return -1;
 	}
 
-	std::vector<Scene> scenes;
+	std::vector<Scene*> scenes;
 	CreateScenes(device, scenes);
 	int sceneIndex = 0;
 
@@ -208,10 +208,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 		immediateContext->OMSetRenderTargets(5, rtv, dsView);
 
-
-		scenes.at(sceneIndex).DrawScene(immediateContext);
-
-		
+		scenes.at(sceneIndex)->DrawScene(immediateContext);
 
 		immediateContext->OMSetRenderTargets(5, RTVnull, nullptr);
 
@@ -246,6 +243,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	swapChain->Release();
 	dsTexture->Release();
 	dsView->Release();
+	uav->Release();
+
+	for (size_t i = 0; i < scenes.size(); i++)
+	{
+		scenes.at(i)->~Scene();
+	}
 
 	return true;
 }

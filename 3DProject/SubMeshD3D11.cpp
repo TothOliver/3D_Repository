@@ -13,16 +13,6 @@ SubMeshD3D11::SubMeshD3D11(Material mat, size_t startIndex, size_t nrOfIndicies)
 
 SubMeshD3D11::~SubMeshD3D11()
 {
-	/*
-	mat.ambientTexture->Release();
-	mat.diffuseTexture->Release();
-	mat.specularTexture->Release();
-	mat.emissionTexture->Release();
-	*/
-	/*if (mat.surfaceMapping.displacementTexture != nullptr)
-		mat.surfaceMapping.displacementTexture->Release();
-	else if (mat.surfaceMapping.normalTexture != nullptr)
-		mat.surfaceMapping.normalTexture->Release();*/
 }
 
 void SubMeshD3D11::PerformDrawCall(ID3D11DeviceContext* immediateContext) const

@@ -62,6 +62,7 @@ ID3D11ShaderResourceView* CreateSRV(ID3D11Device* &device, unsigned char* imageD
 	if (FAILED(hr))
 		return nullptr;
 
+	texture->Release();
 	return srv;
 }
 
@@ -129,7 +130,7 @@ void InsertTangents(std::vector<float>& verticies)
 	}
 }
 
-int ParseObj(ID3D11Device* &device, std::string filename, std::vector<float>& vertexbuffer, std::vector<uint32_t>& indexbuffer, std::vector<SubMeshD3D11>& submeshes)
+int ParseObj(ID3D11Device* &device, std::string filename, std::vector<float>& vertexbuffer, std::vector<uint32_t>& indexbuffer, std::vector<SubMeshD3D11*>& submeshes, std::vector<Material>& materials)
 //Parses OBJ file and its MTL file if it exists
 {
 	stbi_set_flip_vertically_on_load(true);
@@ -139,8 +140,6 @@ int ParseObj(ID3D11Device* &device, std::string filename, std::vector<float>& ve
 	std::vector<float> uvCoordinates;
 	std::vector<int> uvIndicies;
 	std::vector<int> normalIndicies;
-
-	std::vector<Material> materials;
 
 	std::string currentMat = "default";
 	size_t subMeshStartIndex = 0;
@@ -240,12 +239,13 @@ int ParseObj(ID3D11Device* &device, std::string filename, std::vector<float>& ve
 				for (size_t i = 0; i < materials.size(); i++)
 					if (currentMat == materials.at(i).name)
 					{
-						submeshes.push_back(SubMeshD3D11(materials.at(i), subMeshStartIndex, subMeshNrOfIndicies));
+						SubMeshD3D11* subMesh = new SubMeshD3D11(materials.at(i), subMeshStartIndex, subMeshNrOfIndicies);
+						submeshes.push_back(subMesh);
 						break;
 					}
 
 			currentMat = line.substr(7, line.length() - 7);
-			subMeshStartIndex = indexbuffer.size() - 1;
+			subMeshStartIndex = 0;
 			subMeshNrOfIndicies = 0;
 		}
 
@@ -264,7 +264,8 @@ int ParseObj(ID3D11Device* &device, std::string filename, std::vector<float>& ve
 		for (size_t i = 0; i < materials.size(); i++)
 			if (currentMat == materials.at(i).name)
 			{
-				submeshes.push_back(SubMeshD3D11(materials.at(i), subMeshStartIndex, subMeshNrOfIndicies));
+				SubMeshD3D11* subMesh = new SubMeshD3D11(materials.at(i), subMeshStartIndex, subMeshNrOfIndicies);
+				submeshes.push_back(subMesh);
 				break;
 			}
 	}
@@ -272,7 +273,9 @@ int ParseObj(ID3D11Device* &device, std::string filename, std::vector<float>& ve
 	{
 		Material defaultMat;
 		CreateDefaultMat(device, defaultMat);
-		submeshes.push_back(SubMeshD3D11(defaultMat, 0, indexbuffer.size()));
+		SubMeshD3D11* subMesh = new SubMeshD3D11(defaultMat, 0, indexbuffer.size());
+		submeshes.push_back(subMesh);
+		materials.push_back(defaultMat);
 	}
 
 	//Filling the vertexbuffer according to input layout

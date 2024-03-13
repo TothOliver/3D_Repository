@@ -8,7 +8,7 @@ ConstantBufferD3D11::ConstantBufferD3D11(ID3D11Device* device, size_t byteSize, 
 
 ConstantBufferD3D11::~ConstantBufferD3D11()
 {
-	//this->buffer->Release();
+	this->buffer->Release();
 }
 
 ConstantBufferD3D11::ConstantBufferD3D11(ConstantBufferD3D11&& other) noexcept
