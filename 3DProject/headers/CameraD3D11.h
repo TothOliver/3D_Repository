@@ -39,6 +39,7 @@ public:
 
 	void Initialize(ID3D11Device* device, const ProjectionInfo& projectionInfo, const DirectX::XMFLOAT3& initialPosition = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f));
 
+
 	void MoveForward(float amount);
 	void MoveRight(float amount);
 	void MoveUp(float amount);

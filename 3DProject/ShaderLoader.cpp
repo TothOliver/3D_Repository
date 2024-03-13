@@ -1,14 +1,11 @@
 #include "headers/ShaderLoader.h"
 
 
-bool CreateShaders(ID3D11Device* device, ID3D11DeviceContext* context, ShaderD3D11& vertexShader, ShaderD3D11& pixelShader, InputLayoutD3D11& inputLayout)
+bool CreateShaders(ID3D11Device* device, ID3D11DeviceContext* context, ShaderD3D11& vertexShader, ShaderD3D11& computeShader, ShaderD3D11& pixelShader, InputLayoutD3D11& inputLayout)
 {
     vertexShader.Initialize(device, ShaderType::VERTEX_SHADER, "shaders/VertexShader.cso");
+    computeShader.Initialize(device, ShaderType::COMPUTE_SHADER, "shaders/ComputeShader.cso");
     pixelShader.Initialize(device, ShaderType::PIXEL_SHADER, "shaders/PixelShader.cso");
-
-    vertexShader.BindShader(context);
-    pixelShader.BindShader(context);
-
 
     return true;
 }
@@ -40,13 +37,13 @@ bool CreateSampler(ID3D11Device* device, SamplerD3D11& sampler)
     return true;
 }
 
-bool ShaderLoader(ID3D11Device* device, ID3D11DeviceContext* context, ShaderD3D11& vertexShader, ShaderD3D11& pixelShader,
-    InputLayoutD3D11& inputLayout, ShaderResourceTextureD3D11& srt, SamplerD3D11& sampler)
+bool ShaderLoader(ID3D11Device* device, ID3D11DeviceContext* context, ShaderD3D11& vertexShader, ShaderD3D11& computeShader, ShaderD3D11& pixelShader,
+    InputLayoutD3D11& inputLayout, SamplerD3D11& sampler)
 {
 
-    CreateShaders(device, context, vertexShader, pixelShader, inputLayout);
+    CreateShaders(device, context, vertexShader, computeShader, pixelShader, inputLayout);
     CreateInputLayout(inputLayout, device, vertexShader);
-    CreateTexture(device, srt);
+
     CreateSampler(device, sampler);
 
     return true;

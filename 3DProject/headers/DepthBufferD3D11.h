@@ -3,6 +3,7 @@
 #include <d3d11_4.h>
 
 #include <vector>
+#include "ShaderResourceTextureD3D11.h"
 
 class DepthBufferD3D11
 {

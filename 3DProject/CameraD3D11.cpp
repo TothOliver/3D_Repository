@@ -47,6 +47,7 @@ void CameraD3D11::Initialize(ID3D11Device* device, const ProjectionInfo& project
 	cameraBuffer.Initialize(device, sizeof(XMFLOAT4X4), &vp);
 }
 
+
 void CameraD3D11::MoveForward(float amount)
 {
 	this->MoveInDirection(amount, { this->forward.x, 0, this->forward.z });

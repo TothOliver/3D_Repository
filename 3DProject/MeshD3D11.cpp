@@ -7,19 +7,37 @@ using namespace DirectX;
 
 MeshD3D11::MeshD3D11(ID3D11Device*& device, std::string filename, float worldX, float worldY, float worldZ, float scale)
 {
-	MeshData mData;
-	ParseObj(device, filename, mData.vertexData, mData.indexData, this->subMeshes);
+	this->mData.worldX = worldX;
+	this->mData.worldY = worldY;
+	this->mData.worldZ = worldZ;
 
-	this->vertexBuffer.Initialize(device, 8, mData.vertexData.size() / 8, mData.vertexData.data());
+	ParseObj(device, filename, this->mData.vertexData, this->mData.indexData, this->subMeshes, this->mData.materials);
 
-	this->indexBuffer.Initialize(device, mData.indexData.size(), mData.indexData.data());
+	this->vertexBuffer.Initialize(device, 8, this->mData.vertexData.size() / 8, this->mData.vertexData.data());
 
-	XMFLOAT4X4 world[2];
-	XMStoreFloat4x4(&world[0], XMMatrixTranspose(XMMatrixTranslation(worldX, worldY, worldZ)));
-	XMMATRIX view = XMMatrixLookAtLH({ 0, 0, -10 }, { 0, 0, 0 }, { 0, 1, 0 });
-	XMMATRIX proj = XMMatrixPerspectiveFovLH(1, 16.0f / 9, 1, 20);
-	XMStoreFloat4x4(&world[1], XMMatrixTranspose(XMMatrixMultiply(view, proj)));
-	this->worldMatrixBuffer.Initialize(device, sizeof(XMFLOAT4X4) * 2, &world);
+	this->indexBuffer.Initialize(device, this->mData.indexData.size(), this->mData.indexData.data());
+
+	XMFLOAT4X4 world;
+	XMStoreFloat4x4(&world, XMMatrixTranspose(XMMatrixTranslation(worldX, worldY, worldZ)));
+	this->worldMatrixBuffer.Initialize(device, sizeof(XMFLOAT4X4), &world);
+}
+
+MeshD3D11::~MeshD3D11() 
+{
+	for (size_t i = 0; i < subMeshes.size(); i++)
+	{
+		subMeshes.at(i)->~SubMeshD3D11();
+		subMeshes.at(i) = nullptr;
+	}
+
+	for (size_t i = 0; i < this->mData.materials.size(); i++)
+	{
+		this->mData.materials.at(i).ambientTexture->Release();
+		this->mData.materials.at(i).diffuseTexture->Release();
+		this->mData.materials.at(i).specularTexture->Release();
+		this->mData.materials.at(i).emissionTexture->Release();
+		this->mData.materials.at(i).surfaceMapping.normalTexture->Release();
+	}
 }
 
 void MeshD3D11::BindMeshBuffers(ID3D11DeviceContext* context) const
@@ -32,7 +50,7 @@ void MeshD3D11::BindMeshBuffers(ID3D11DeviceContext* context) const
 	context->IASetVertexBuffers(0, 1, &vBuffer, &stride, &offset);
 	context->VSSetConstantBuffers(0, 1, &worldViewProj);
 
-	this->subMeshes.at(0).PerformDrawCall(context);
+	this->subMeshes.at(0)->PerformDrawCall(context);
 	context->Draw(this->vertexBuffer.GetNrOfVertices(), 0);
 }
 

@@ -138,6 +138,8 @@
     </ClCompile>
     <ClCompile Include="ConstantBufferD3D11.cpp" />
     <ClCompile Include="D3D11Helper.cpp" />
+    <ClCompile Include="GBuffer.cpp" />
+    <ClCompile Include="headers\DepthBufferD3D11.cpp" />
     <ClCompile Include="IndexBufferD3D11.cpp" />
     <ClCompile Include="InputLayoutD3D11.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -151,6 +153,8 @@
     <ClCompile Include="ShaderD3D11.cpp" />
     <ClCompile Include="ShaderLoader.cpp" />
     <ClCompile Include="ShaderResourceTextureD3D11.cpp" />
+    <ClCompile Include="SpotLightCollectionD3D11.cpp" />
+    <ClCompile Include="StructuredBufferD3D11.cpp" />
     <ClCompile Include="SubMeshD3D11.cpp" />
     <ClCompile Include="VertexBufferD3D11.cpp" />
     <ClCompile Include="Window.cpp" />
@@ -160,6 +164,7 @@
     <ClInclude Include="headers\ConstantBufferD3D11.h" />
     <ClInclude Include="headers\D3D11Helper.h" />
     <ClInclude Include="headers\DepthBufferD3D11.h" />
+    <ClInclude Include="headers\GBuffer.h" />
     <ClInclude Include="headers\IndexBufferD3D11.h" />
     <ClInclude Include="headers\InputLayoutD3D11.h" />
     <ClInclude Include="headers\Material.h" />
@@ -179,6 +184,9 @@
     <ClInclude Include="headers\Window.h" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="shaders\ComputeShader.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+    </FxCompile>
     <FxCompile Include="shaders\PixelShader.hlsl">
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\%(Filename).cso</ObjectFileOutput>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
