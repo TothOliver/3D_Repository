@@ -1,6 +1,6 @@
 #pragma once
 
-#include <windows.h>
+#include <Windows.h>
 #include <iostream>
 #include <d3d11.h>
 
@@ -10,26 +10,22 @@
 #include "headers/ShaderLoader.h"
 #include "headers/InputLayoutD3D11.h"
 #include "headers/SamplerD3D11.h"
-
 #include "headers/CameraD3D11.h"
 #include "headers/GBuffer.h"
 
-#include "headers/DepthBufferD3D11.h"
 #include "headers/SpotLightCollectionD3D11.h"
 
 #include "headers/Parser.h"
 #include "headers/SceneManager.h"
 #include <DirectXMath.h>
-#include <dxgidebug.h>
 
-#define CAMERA_SPEED 0.02f
+#define CAMERA_SPEED 0.05f
 #define CAMERA_ROTATION_SPEED 0.002
 
 using namespace DirectX;
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
-
 	const UINT WIDTH = 1024;
 	const UINT HEIGHT = 576;
 	HWND window;
@@ -57,45 +53,81 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		return -1;
 	}
 
-
 	GBuffer positionBuffer(device, WIDTH, HEIGHT);
 	GBuffer normalBuffer(device, WIDTH, HEIGHT);
-	ID3D11RenderTargetView* rtv[2];
-	ID3D11ShaderResourceView* srv[2];
+	GBuffer ambientBuffer(device, WIDTH, HEIGHT);
+	GBuffer diffuseBuffer(device, WIDTH, HEIGHT);
+	GBuffer specularBuffer(device, WIDTH, HEIGHT);
+
+	ID3D11RenderTargetView* rtv[5];
+	ID3D11ShaderResourceView* srv[6];
 	rtv[0] = positionBuffer.GetRTV();
 	rtv[1] = normalBuffer.GetRTV();
+	rtv[2] = ambientBuffer.GetRTV();
+	rtv[3] = diffuseBuffer.GetRTV();
+	rtv[4] = specularBuffer.GetRTV();
+
 	srv[0] = positionBuffer.GetSRV();
 	srv[1] = normalBuffer.GetSRV();
+	srv[2] = ambientBuffer.GetSRV();
+	srv[3] = diffuseBuffer.GetSRV();
+	srv[4] = specularBuffer.GetSRV();
 
+	ID3D11RenderTargetView* RTVnull[5];
+	ID3D11ShaderResourceView* SRVnull[6];
+	RTVnull[0] = nullptr;
+	RTVnull[1] = nullptr;
+	RTVnull[2] = nullptr;
+	RTVnull[3] = nullptr;
+	RTVnull[4] = nullptr;
+
+	SRVnull[0] = nullptr;
+	SRVnull[1] = nullptr;
+	SRVnull[2] = nullptr;
+	SRVnull[3] = nullptr;
+	SRVnull[4] = nullptr;
+	SRVnull[5] = nullptr;
+
+	
 	ShaderD3D11 vertexShader;
 	ShaderD3D11 computeShader;
 	ShaderD3D11 pixelShader;
 	InputLayoutD3D11 inputLayout;
 	SamplerD3D11 sampler;
 	std::string vShaderByteCode;
-	ID3D11SamplerState* sState = {};
-
+	
 
 	//Initialize camera with desired values
 	CameraD3D11 camera;
-	camera.Initialize(device, { 1, (float)16 / 9, 1, 100 }, { 0, 0, -10.0f });
+	camera.Initialize(device, { 1, (float)16 / 9, 0.05, 100 }, { 0, 0, -10.0f });
 
-	SpotLightCollectionD3D11 spotLightCollection;
-	SpotLightData sld = {};
+
+	//Initialize ligth sources with shadows
+	SpotLightCollectionD3D11 spotLights;
+	SpotLightData light1;
+	SpotLightData light2;
+
+	CreatePerLightInfo(light1);
+	light1.pli.intensity = { 2, 100, 20, 0 };
+	light2.pli.intensity = { 1, 100, 0, 0 };
+	
+	spotLights.InitializeLightSource(device, light1);
+	spotLights.InitializeLightSource(device, light2);
+	spotLights.InitializeStructuredBuffer(device);
+	
+	srv[5] = spotLights.GetLightBufferSRV();
+
+	SingleFloat aFloat;
+	aFloat.nrOfLights[0] = spotLights.GetNrOfLights();
+	ConstantBufferD3D11 nrOfLightBuffer;
+	nrOfLightBuffer.Initialize(device, sizeof(aFloat), &aFloat);
+	ID3D11Buffer* nrBuffer = nrOfLightBuffer.GetBuffer();
 
 	//Create variables for storing mouse input information and more
 	ID3D11Buffer* vpBuffer;
 	POINT p;
 	RECT rect;
 	LPRECT lpRect = &rect;
-
-	ID3D11RenderTargetView* RTVnull[2];
-	ID3D11ShaderResourceView* SRVnull[2];
-	RTVnull[0] = nullptr;
-	RTVnull[1] = nullptr;
-	SRVnull[0] = nullptr;
-	SRVnull[1] = nullptr;
-
 	ShowCursor(false);
 
 	if (!ShaderLoader(device, immediateContext, vertexShader, computeShader, pixelShader, inputLayout, sampler))
@@ -172,46 +204,61 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		//Updating camera position
 		camera.UpdateInternalConstantBuffer(immediateContext);
 
+		vpBuffer = camera.GetVPBuffer();
 
-		vpBuffer = camera.GetConstantBuffer();
-		ID3D11Buffer* lightcameraBuffer;
-		lightcameraBuffer = spotLightCollection.GetLightCameraConstantBuffer(0);
 		immediateContext->VSSetConstantBuffers(1, 1, &vpBuffer);
-		immediateContext->PSSetConstantBuffers(1, 1, &lightcameraBuffer);
+
 
 		immediateContext->ClearRenderTargetView(rtv[0], clear);
 		immediateContext->ClearRenderTargetView(rtv[1], clear);
+		immediateContext->ClearRenderTargetView(rtv[2], clear);
+		immediateContext->ClearRenderTargetView(rtv[3], clear);
+		immediateContext->ClearRenderTargetView(rtv[4], clear);
+
 		immediateContext->ClearUnorderedAccessViewFloat(uav, clearColour);
 		immediateContext->ClearDepthStencilView(dsView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
 		
 		immediateContext->IASetInputLayout(inputLayout.GetInputLayout());
 		immediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		sState = sampler.GetSamplerState();
-		immediateContext->CSSetSamplers(0, 1, &sState);
+		ID3D11SamplerState* sState = sampler.GetSamplerState();
+		immediateContext->PSSetSamplers(0, 1, &sState);
 
 		vertexShader.BindShader(immediateContext);
 
 		immediateContext->RSSetViewports(1, &viewport);
 
+		for (UINT lightIndex = 0; lightIndex < spotLights.GetNrOfLights(); lightIndex++) {
+
+
+		}
+
 		pixelShader.BindShader(immediateContext);
 
-		immediateContext->OMSetRenderTargets(2, rtv, dsView);
-
-		if (scenes.size() == 0)
-			break;
+		immediateContext->OMSetRenderTargets(5, rtv, dsView);
 
 		scenes.at(sceneIndex)->DrawScene(immediateContext);
 
-		immediateContext->OMSetRenderTargets(2, RTVnull, nullptr);
+		immediateContext->OMSetRenderTargets(5, RTVnull, nullptr);
 
-		immediateContext->CSSetShaderResources(0, 2, srv);
+		immediateContext->CSSetShaderResources(0, 5, srv);
+
+		ID3D11ShaderResourceView* srv2 = spotLights.GetLightBufferSRV();
+		immediateContext->CSSetShaderResources(5, 1, &srv2);
 		immediateContext->CSSetUnorderedAccessViews(0, 1, &uav, nullptr);
 
 		computeShader.BindShader(immediateContext);
 		immediateContext->Dispatch(WIDTH / 8, HEIGHT / 8, 1);
 
-		immediateContext->CSSetShaderResources(0, 2, SRVnull);
+		immediateContext->CSSetShaderResources(0, 6, SRVnull);
+
+		ID3D11Buffer* cameraPosition = camera.GetPositionBuffer();
+		immediateContext->CSSetConstantBuffers(0, 1, &cameraPosition);
+
+		ID3D11Buffer* sBuffer = spotLights.GetLightBuffer();
+		immediateContext->PSSetConstantBuffers(0, 1, &sBuffer);
+		immediateContext->CSSetConstantBuffers(1, 1, &sBuffer);
+		immediateContext->CSSetConstantBuffers(2, 1, &nrBuffer);
 
 
 		if ((GetAsyncKeyState(0x31) & 0x0101)) //1 key

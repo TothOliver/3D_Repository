@@ -42,21 +42,25 @@ int CreateScenes(ID3D11Device* device, std::vector<Scene*>& scenes)
 	MeshD3D11* rat3 = new MeshD3D11(device, "rat.obj", 5, 0, 0);
 
 	scene2->AddObject(rat1);
-	scenes.push_back(scene2);
 	scene2->AddObject(rat2);
 	scene2->AddObject(rat3);
-
-	scenes.push_back(scene1);
 
 	Scene* scene3 = new Scene();
 	MeshD3D11* axe = new MeshD3D11(device, "axe.obj");
 	scene3->AddObject(axe);
+
+	scenes.push_back(scene1);
+	scenes.push_back(scene2);
 	scenes.push_back(scene3);
 
 	Scene* scene4 = new Scene();
-	MeshD3D11* bike = new MeshD3D11(device, "bicycle.obj");
-	scene4->AddObject(bike);
+
+	MeshD3D11* plane = new MeshD3D11(device, "plane.obj", 0, -5, 0);
+	MeshD3D11* sphere = new MeshD3D11(device, "sphere.obj");
+	scene4->AddObject(plane);
+	scene4->AddObject(sphere);
 	scenes.push_back(scene4);
+
 
 	return 0;
 }

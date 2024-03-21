@@ -30,8 +30,7 @@ VertexBufferD3D11::VertexBufferD3D11(ID3D11Device* device, UINT sizeOfVertex,
 
 VertexBufferD3D11::~VertexBufferD3D11()
 {
-	if (this->buffer != nullptr)
-		this->buffer->Release();
+	buffer->Release();
 }
 
 UINT VertexBufferD3D11::GetNrOfVertices() const

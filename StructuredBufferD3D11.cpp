@@ -1,4 +1,4 @@
-#include "StructuredBufferD3D11.h"
+#include "headers/StructuredBufferD3D11.h"
 
 StructuredBufferD3D11::StructuredBufferD3D11(ID3D11Device* device, UINT sizeOfElement, size_t nrOfElementsInBuffer, void* bufferData, bool dynamic)
 {
@@ -9,6 +9,8 @@ StructuredBufferD3D11::~StructuredBufferD3D11()
 {
 	if (this->buffer != nullptr)
 		this->buffer->Release();
+	if (this->srv != nullptr)
+		this->srv->Release();
 }
 
 void StructuredBufferD3D11::Initialize(ID3D11Device* device, UINT sizeOfElement, size_t nrOfElementsInBuffer, void* bufferData, bool dynamic)
@@ -40,7 +42,6 @@ void StructuredBufferD3D11::Initialize(ID3D11Device* device, UINT sizeOfElement,
 
 	if (FAILED(hr))
 		printf("failed");
-	//throw std::runtime_error("Failed to create structured buffer");
 
 
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
@@ -52,7 +53,6 @@ void StructuredBufferD3D11::Initialize(ID3D11Device* device, UINT sizeOfElement,
 	if (FAILED(device->CreateShaderResourceView(this->buffer, &srvDesc, &srv)))
 	{
 		printf("ff");
-		//throw std::runtime_error("Failed to create srv for structured buffer");
 	}
 
 }
@@ -78,4 +78,9 @@ size_t StructuredBufferD3D11::GetNrOfElements() const
 ID3D11ShaderResourceView* StructuredBufferD3D11::GetSRV() const
 {
 	return this->srv;
+}
+
+ID3D11Buffer* StructuredBufferD3D11::GetBuffer() const
+{
+	return this->buffer;
 }

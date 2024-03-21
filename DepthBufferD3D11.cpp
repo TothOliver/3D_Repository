@@ -1,4 +1,4 @@
-#include "DepthBufferD3D11.h"
+#include "headers/DepthBufferD3D11.h"
 
 DepthBufferD3D11::DepthBufferD3D11(ID3D11Device* device, UINT width, UINT height, bool hasSRV)
 {
@@ -7,19 +7,18 @@ DepthBufferD3D11::DepthBufferD3D11(ID3D11Device* device, UINT width, UINT height
 
 DepthBufferD3D11::~DepthBufferD3D11()
 {
+	if (this->texture != nullptr)
+		this->texture->Release();
+	if (this->srv != nullptr)
+		this->srv->Release();
+	for (size_t i = 0; i < depthStencilViews.size(); i++) {
+		depthStencilViews[i]->Release();
+
+	}
 }
 
 void DepthBufferD3D11::Initialize(ID3D11Device* device, UINT width, UINT height, bool hasSRV, UINT arraySize)
 {
-	if (!hasSRV)
-	{
-		ShaderResourceTextureD3D11 srt;
-		srt.Initialize(device, 10, 10, this->texture);
-		this->srv = srt.GetSRV(); 
-		this->texture = srt.GetTEXT();
-	}
-
-
 	ID3D11DepthStencilView* dsv;
 
 	D3D11_TEXTURE2D_DESC depthStencilDesc;
@@ -35,12 +34,21 @@ void DepthBufferD3D11::Initialize(ID3D11Device* device, UINT width, UINT height,
 	depthStencilDesc.CPUAccessFlags = 0;
 	depthStencilDesc.MiscFlags = 0;
 
-	if (FAILED(device->CreateTexture2D(&depthStencilDesc, nullptr, &this->texture))) {
-		printf("ojoj");
+	if (!hasSRV)
+	{
+		if (FAILED(device->CreateTexture2D(&depthStencilDesc, nullptr, &this->texture))) {
+			printf("ojoj");
+		}
+		if (FAILED(device->CreateShaderResourceView(this->texture, nullptr, &srv))) {
+			printf("ojaj");
+		}
 	}
+
 	if (FAILED(device->CreateDepthStencilView(this->texture, nullptr, &dsv))) {
 		printf("ajaj");
 	}
+
+
 	
 	depthStencilViews.push_back(dsv);
 

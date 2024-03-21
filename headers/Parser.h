@@ -8,7 +8,7 @@
 
 
 
-int ParseObj(ID3D11Device*& device, std::string filename, std::vector<float>& vertexbuffer, std::vector<uint32_t>& indexbuffer, std::vector<SubMeshD3D11>& submeshes);
+int ParseObj(ID3D11Device*& device, std::string filename, std::vector<float>& vertexbuffer, std::vector<uint32_t>& indexbuffer, std::vector<SubMeshD3D11*>& submeshes, std::vector<Material>& materials);
 
 int ParseMtl(ID3D11Device* &device, std::string filename, std::vector<Material>& materials);
 

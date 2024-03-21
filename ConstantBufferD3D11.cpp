@@ -30,7 +30,7 @@ void ConstantBufferD3D11::Initialize(ID3D11Device* device, size_t byteSize, void
 	constBufferDesc.ByteWidth = byteSize;
 	constBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 	constBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	constBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	constBufferDesc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
 	constBufferDesc.MiscFlags = 0;
 	constBufferDesc.StructureByteStride = 0;
 
@@ -39,7 +39,9 @@ void ConstantBufferD3D11::Initialize(ID3D11Device* device, size_t byteSize, void
 	cameraData.SysMemPitch = 0;
 	cameraData.SysMemSlicePitch = 0;
 
-	device->CreateBuffer(&constBufferDesc, &cameraData, &this->buffer);
+	if (FAILED(device->CreateBuffer(&constBufferDesc, &cameraData, &this->buffer))) {
+		printf("hehe");
+	}
 }
 
 size_t ConstantBufferD3D11::GetSize() const

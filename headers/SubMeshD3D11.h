@@ -33,6 +33,5 @@ public:
 	ID3D11ShaderResourceView* GetSpecularSRV() const;
 	ID3D11ShaderResourceView* GetEmissionSRV() const;
 	ID3D11ShaderResourceView* GetDisplacementSRV() const;
-	ID3D11ShaderResourceView* GetParallaxSRV() const;
 	ID3D11ShaderResourceView* GetNormalSRV() const;
 };
