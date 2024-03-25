@@ -12,8 +12,6 @@ MeshD3D11::MeshD3D11(ID3D11Device*& device, std::string filename, float worldX, 
 
 	this->vertexBuffer.Initialize(device, 11, mData.vertexData.size() / 11, mData.vertexData.data());
 
-	this->indexBuffer.Initialize(device, mData.indexData.size(), mData.indexData.data());
-
 	XMFLOAT4X4 world;
 	XMStoreFloat4x4(&world, XMMatrixTranspose(XMMatrixTranslation(worldX, worldY, worldZ)));
 	this->worldMatrixBuffer.Initialize(device, sizeof(XMFLOAT4X4), &world);
@@ -48,7 +46,11 @@ void MeshD3D11::BindMeshBuffers(ID3D11DeviceContext* context) const
 	context->IASetVertexBuffers(0, 1, &vBuffer, &stride, &offset);
 	context->VSSetConstantBuffers(0, 1, &worldViewProj);
 
-	this->subMeshes.at(0)->PerformDrawCall(context);
-	context->Draw(this->vertexBuffer.GetNrOfVertices(), 0);
+
+
+	for (size_t i = 0; i < subMeshes.size(); i++)
+	{
+		this->subMeshes.at(i)->PerformDrawCall(context);
+	}
 }
 

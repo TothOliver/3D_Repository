@@ -28,7 +28,6 @@ private:
 	MeshData mData;
 	std::vector<SubMeshD3D11*> subMeshes;
 	VertexBufferD3D11 vertexBuffer;
-	IndexBufferD3D11 indexBuffer;
 	ConstantBufferD3D11 worldMatrixBuffer;
 
 public:

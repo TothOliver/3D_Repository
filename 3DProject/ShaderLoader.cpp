@@ -25,7 +25,7 @@ bool CreateSampler(ID3D11Device* device, SamplerD3D11& sampler)
 {
     std::optional<std::array<float, 4>> borderColour;
     borderColour = { 1, 1, 1, 1 };
-    sampler.Initialize(device, D3D11_TEXTURE_ADDRESS_CLAMP, borderColour);
+    sampler.Initialize(device, D3D11_TEXTURE_ADDRESS_WRAP, borderColour);
 
     return true;
 }

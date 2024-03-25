@@ -32,6 +32,7 @@ VertexShaderOutput main(VertexShaderInput input)
     output.position = mul(output.world_position, view_projection);
     output.normal = normalize(mul(float4(input.normal, 0), world_matrix));
     output.tangent = normalize(mul(float4(input.tangent, 0), world_matrix));
+    
     output.uv = input.uv;
 	return output;
 }

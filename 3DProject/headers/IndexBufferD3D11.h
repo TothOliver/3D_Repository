@@ -12,14 +12,13 @@ private:
 
 public:
 	IndexBufferD3D11() = default;
-	IndexBufferD3D11(ID3D11Device* device, size_t nrOfIndicesInBuffer, uint32_t* indexData);
 	~IndexBufferD3D11();
 	IndexBufferD3D11(const IndexBufferD3D11& other) = delete;
 	IndexBufferD3D11& operator=(const IndexBufferD3D11& other) = delete;
 	IndexBufferD3D11(IndexBufferD3D11&& other) = delete;
 	IndexBufferD3D11& operator=(IndexBufferD3D11&& other) = delete;
 
-	void Initialize(ID3D11Device* device, size_t nrOfIndicesInBuffer, uint32_t* indexData);
+	void Initialize(ID3D11Device* device, size_t nrOfIndicesInBuffer, size_t startIndex);
 
 	size_t GetNrOfIndices() const;
 	ID3D11Buffer* GetBuffer() const;

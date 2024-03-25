@@ -80,6 +80,7 @@ void CreateDefaultMat(ID3D11Device*& device, Material& newMat)
 	newMat.diffuseTexture = CreateSRV(device, textureData, width, height);
 
 	textureData = stbi_load(CONCAT(PATH, DEFAULT), &width, &height, &channels, COLOUR_CHANNELS);
+	textureData[4] = 10; //Specular exponent stored in alpha channel
 	newMat.specularTexture = CreateSRV(device, textureData, width, height);
 
 	textureData = stbi_load(CONCAT(PATH, "defaultEmission.png"), &width, &height, &channels, COLOUR_CHANNELS);
@@ -89,14 +90,12 @@ void CreateDefaultMat(ID3D11Device*& device, Material& newMat)
 	newMat.surfaceMapping.normalTexture = CreateSRV(device, textureData, width, height);
 
 	newMat.name = "default";
-
-	newMat.specularExponent = 10;
 }
 
 void InsertTangents(std::vector<float>& verticies)
 {
 	//Calculate tangent for each face
-	for (size_t i = 0; i < verticies.size() / VERTEX_SIZE - 2; i += 3)
+	for (size_t i = 0; i < verticies.size() / VERTEX_SIZE; i += 3)
 	{
 		int vertexIndex = i * VERTEX_SIZE;
 
@@ -104,7 +103,7 @@ void InsertTangents(std::vector<float>& verticies)
 		XMVECTOR deltaPOS1 = XMVectorSubtract(XMVECTOR({verticies.at(vertexIndex + VERTEX_SIZE), verticies.at(vertexIndex + VERTEX_SIZE + 1), verticies.at(vertexIndex + VERTEX_SIZE + 2), 1.0f}), XMVECTOR({verticies.at(i), verticies.at(vertexIndex + 1), verticies.at(vertexIndex + 2), 1.0f }));
 
 		//Triangle side V2-V0
-		XMVECTOR deltaPOS2 = XMVectorSubtract(XMVECTOR({verticies.at(vertexIndex+ 2 * VERTEX_SIZE), verticies.at(vertexIndex+ 2 * VERTEX_SIZE + 1), verticies.at(vertexIndex+ 2 * VERTEX_SIZE + 2), 1.0f }), XMVECTOR({verticies.at(i), verticies.at(vertexIndex+ 1), verticies.at(vertexIndex + 2), 1.0f }));
+		XMVECTOR deltaPOS2 = XMVectorSubtract(XMVECTOR({verticies.at(vertexIndex+ 2 * VERTEX_SIZE), verticies.at(vertexIndex+ 2 * VERTEX_SIZE + 1), verticies.at(vertexIndex+ 2 * VERTEX_SIZE + 2), 1.0f }), XMVECTOR({verticies.at(i), verticies.at(vertexIndex + 1), verticies.at(vertexIndex + 2), 1.0f }));
 
 		//UV coordinate side UV1 - UV0
 		XMFLOAT2 deltaUV1;
@@ -125,9 +124,9 @@ void InsertTangents(std::vector<float>& verticies)
 			verticies.at(vertexIndex + n * VERTEX_SIZE + TANGENT_LOCAL_INDEX + 1) = tangent.y;
 			verticies.at(vertexIndex + n * VERTEX_SIZE + TANGENT_LOCAL_INDEX + 2) = tangent.z;
 		}
-		
-
 	}
+
+	return;
 }
 
 int ParseObj(ID3D11Device* &device, std::string filename, std::vector<float>& vertexbuffer, std::vector<uint32_t>& indexbuffer, std::vector<SubMeshD3D11*>& submeshes, std::vector<Material>& materials)
@@ -141,7 +140,7 @@ int ParseObj(ID3D11Device* &device, std::string filename, std::vector<float>& ve
 	std::vector<int> uvIndicies;
 	std::vector<int> normalIndicies;
 
-	std::string currentMat = "default";
+	std::string currentMat = "";
 	size_t subMeshStartIndex = 0;
 	size_t subMeshNrOfIndicies = 0;
 
@@ -235,17 +234,30 @@ int ParseObj(ID3D11Device* &device, std::string filename, std::vector<float>& ve
 
 		else if (line.substr(0, 6) == "usemtl")
 		{
-			if (currentMat != "default")
-				for (size_t i = 0; i < materials.size(); i++)
+			if (currentMat != "")
+			{
+				size_t i = 0;
+				for (; i < materials.size(); i++)
 					if (currentMat == materials.at(i).name)
 					{
 						SubMeshD3D11* subMesh = new SubMeshD3D11(materials.at(i), subMeshStartIndex, subMeshNrOfIndicies);
 						submeshes.push_back(subMesh);
 						break;
 					}
+				if (i >= materials.size())
+				{
+					//Create a default material if material is missing
+					Material defaultMat;
+					CreateDefaultMat(device, defaultMat);
+					SubMeshD3D11* subMesh = new SubMeshD3D11(defaultMat, 0, indexbuffer.size());
+					submeshes.push_back(subMesh);
+					materials.push_back(defaultMat);
+				}
+			}
+
 
 			currentMat = line.substr(7, line.length() - 7);
-			subMeshStartIndex = 0;
+			subMeshStartIndex = subMeshNrOfIndicies;
 			subMeshNrOfIndicies = 0;
 		}
 
@@ -259,18 +271,17 @@ int ParseObj(ID3D11Device* &device, std::string filename, std::vector<float>& ve
 	}
 
 	//For adding last submesh
-	if (currentMat != "default")
+	size_t matIndex = 0;
+	for (; matIndex < materials.size(); matIndex++)
+		if (currentMat == materials.at(matIndex).name)
+		{
+			SubMeshD3D11* subMesh = new SubMeshD3D11(materials.at(matIndex), subMeshStartIndex, subMeshNrOfIndicies);
+			submeshes.push_back(subMesh);
+			break;
+		}
+	if (matIndex >= materials.size())
 	{
-		for (size_t i = 0; i < materials.size(); i++)
-			if (currentMat == materials.at(i).name)
-			{
-				SubMeshD3D11* subMesh = new SubMeshD3D11(materials.at(i), subMeshStartIndex, subMeshNrOfIndicies);
-				submeshes.push_back(subMesh);
-				break;
-			}
-	}
-	else
-	{
+		//Create a default material if material is missing
 		Material defaultMat;
 		CreateDefaultMat(device, defaultMat);
 		SubMeshD3D11* subMesh = new SubMeshD3D11(defaultMat, 0, indexbuffer.size());
@@ -347,6 +358,8 @@ int ParseMtl(ID3D11Device* &device, std::string filename, std::vector<Material>&
 
 			int width, height, channels;
 			unsigned char* textureData;
+			unsigned char* specularData = nullptr;
+			float specularExponent = -1;
 
 			while (std::getline(mtlFile, line))
 			{
@@ -362,8 +375,8 @@ int ParseMtl(ID3D11Device* &device, std::string filename, std::vector<Material>&
 				}
 				else if (line.substr(0, 6) == "map_Ks")
 				{
-					textureData = stbi_load((PATH + line.substr(7, line.length() - 7)).c_str(), &width, &height, &channels, COLOUR_CHANNELS);
-					newMat.specularTexture = CreateSRV(device, textureData, width, height);
+					specularData = stbi_load((PATH + line.substr(7, line.length() - 7)).c_str(), &width, &height, &channels, COLOUR_CHANNELS);
+					newMat.specularTexture = CreateSRV(device, specularData, width, height);
 				}
 				else if (line.substr(0, 6) == "map_Ke")
 				{
@@ -384,7 +397,8 @@ int ParseMtl(ID3D11Device* &device, std::string filename, std::vector<Material>&
 				{
 					newMat.specularExponent = std::stof(line.substr(3, line.length() - 3));
 				}
-				else if (line.empty())
+
+				if (line.empty())
 					break;
 			}
 

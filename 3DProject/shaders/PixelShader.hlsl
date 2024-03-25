@@ -18,9 +18,11 @@ struct PSOutput
 {
     float4 position : SV_TARGET0;
     float4 normal : SV_TARGET1;
-    float4 ambientColour : SV_TARGET2;
-    float4 diffuseColour : SV_TARGET3;
-    float4 specular : SV_TARGET4;
+    float4 tangent : SV_TARGET2;
+    float4 ambientColour : SV_TARGET3;
+    float4 diffuseColour : SV_TARGET4;
+    float4 specular : SV_TARGET5;
+    float4 normalMap : SV_TARGET6;
 };
 
 PSOutput main(PixelShaderInput input)
@@ -28,17 +30,16 @@ PSOutput main(PixelShaderInput input)
     PSOutput output;
     output.position = float4(input.worldPosition.xyz, input.uv.x);
     
-    //Calculate bitangent and transform the texture normal into world space (tangent is already in world space)
-    float3 bitangent = normalize(cross(input.normal, input.tangent));
-    float3x3 tbnMatrix = float3x3(input.tangent, bitangent, input.normal);
-    float3 RGBnormal = normalMap.Sample(textureSampler, input.uv);
-    float3 faceNormal = float3(RGBnormal.x * 2 - 1, RGBnormal.y * 2 - 1, RGBnormal.z * 2 - 1);
+    output.normal = normalize(float4(input.normal, 0));
     
-    output.normal = float4(mul(faceNormal, tbnMatrix), 1);
-    
+
+    output.tangent = normalize(float4(input.tangent, 0));
+        
     output.ambientColour = ambientMap.Sample(textureSampler, input.uv); //float4((output.normal + float4(1, 1, 1, 0)) / 2);
     output.diffuseColour = diffuseMap.Sample(textureSampler, input.uv);
-    output.specular = specularMap.Sample(textureSampler, input.uv);
+    output.specular = float4(specularMap.Sample(textureSampler, input.uv).xyz, 1000); //Store exponent in alpha channel
+    output.normalMap = normalMap.Sample(textureSampler, input.uv);
+    
 
     return output;
 }

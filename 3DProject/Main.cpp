@@ -17,7 +17,7 @@
 #include "headers/SceneManager.h"
 #include <DirectXMath.h>
 
-#define CAMERA_SPEED 0.002f
+#define CAMERA_SPEED 0.005f
 #define CAMERA_ROTATION_SPEED 0.002
 
 using namespace DirectX;
@@ -53,37 +53,47 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 	GBuffer positionBuffer(device, WIDTH, HEIGHT);
 	GBuffer normalBuffer(device, WIDTH, HEIGHT);
+	GBuffer tangentBuffer(device, WIDTH, HEIGHT);
 	GBuffer ambientBuffer(device, WIDTH, HEIGHT);
 	GBuffer diffuseBuffer(device, WIDTH, HEIGHT);
 	GBuffer specularBuffer(device, WIDTH, HEIGHT);
+	GBuffer normalMapBuffer(device, WIDTH, HEIGHT);
 
-	ID3D11RenderTargetView* rtv[5];
-	ID3D11ShaderResourceView* srv[5];
+	ID3D11RenderTargetView* rtv[7];
+	ID3D11ShaderResourceView* srv[7];
 	rtv[0] = positionBuffer.GetRTV();
 	rtv[1] = normalBuffer.GetRTV();
-	rtv[2] = ambientBuffer.GetRTV();
-	rtv[3] = diffuseBuffer.GetRTV();
-	rtv[4] = specularBuffer.GetRTV();
+	rtv[2] = tangentBuffer.GetRTV();
+	rtv[3] = ambientBuffer.GetRTV();
+	rtv[4] = diffuseBuffer.GetRTV();
+	rtv[5] = specularBuffer.GetRTV();
+	rtv[6] = normalMapBuffer.GetRTV();
 
 	srv[0] = positionBuffer.GetSRV();
 	srv[1] = normalBuffer.GetSRV();
-	srv[2] = ambientBuffer.GetSRV();
-	srv[3] = diffuseBuffer.GetSRV();
-	srv[4] = specularBuffer.GetSRV();
+	srv[2] = tangentBuffer.GetSRV();
+	srv[3] = ambientBuffer.GetSRV();
+	srv[4] = diffuseBuffer.GetSRV();
+	srv[5] = specularBuffer.GetSRV();
+	srv[6] = normalMapBuffer.GetSRV();
 
-	ID3D11RenderTargetView* RTVnull[5];
-	ID3D11ShaderResourceView* SRVnull[5];
+	ID3D11RenderTargetView* RTVnull[7];
+	ID3D11ShaderResourceView* SRVnull[7];
 	RTVnull[0] = nullptr;
 	RTVnull[1] = nullptr;
 	RTVnull[2] = nullptr;
 	RTVnull[3] = nullptr;
 	RTVnull[4] = nullptr;
+	RTVnull[5] = nullptr;
+	RTVnull[6] = nullptr;
 
 	SRVnull[0] = nullptr;
 	SRVnull[1] = nullptr;
 	SRVnull[2] = nullptr;
 	SRVnull[3] = nullptr;
 	SRVnull[4] = nullptr;
+	SRVnull[5] = nullptr;
+	SRVnull[6] = nullptr;
 
 	
 	ShaderD3D11 vertexShader;
@@ -113,7 +123,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 	std::vector<Scene*> scenes;
 	CreateScenes(device, scenes);
-	int sceneIndex = 0;
+	int sceneIndex = 2;
 
 	while (!(GetKeyState(VK_ESCAPE) & 0x8000) && msg.message != WM_QUIT)
 	{
@@ -190,6 +200,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		immediateContext->ClearRenderTargetView(rtv[2], clear);
 		immediateContext->ClearRenderTargetView(rtv[3], clear);
 		immediateContext->ClearRenderTargetView(rtv[4], clear);
+		immediateContext->ClearRenderTargetView(rtv[5], clear);
+		immediateContext->ClearRenderTargetView(rtv[6], clear);
 
 		immediateContext->ClearUnorderedAccessViewFloat(uav, clearColour);
 		immediateContext->ClearDepthStencilView(dsView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
@@ -206,19 +218,19 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 		pixelShader.BindShader(immediateContext);
 
-		immediateContext->OMSetRenderTargets(5, rtv, dsView);
+		immediateContext->OMSetRenderTargets(7, rtv, dsView);
 
 		scenes.at(sceneIndex)->DrawScene(immediateContext);
 
-		immediateContext->OMSetRenderTargets(5, RTVnull, nullptr);
+		immediateContext->OMSetRenderTargets(7, RTVnull, nullptr);
 
-		immediateContext->CSSetShaderResources(0, 5, srv);
+		immediateContext->CSSetShaderResources(0, 7, srv);
 		immediateContext->CSSetUnorderedAccessViews(0, 1, &uav, nullptr);
 
 		computeShader.BindShader(immediateContext);
 		immediateContext->Dispatch(WIDTH / 8, HEIGHT / 8, 1);
 
-		immediateContext->CSSetShaderResources(0, 5, SRVnull);
+		immediateContext->CSSetShaderResources(0, 7, SRVnull);
 
 		ID3D11Buffer* cameraPosition = camera.GetPositionBuffer();
 		immediateContext->CSSetConstantBuffers(0, 1, &cameraPosition);
