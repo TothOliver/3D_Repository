@@ -24,6 +24,7 @@ private:
 	ProjectionInfo projInfo;
 
 	ConstantBufferD3D11 cameraBuffer;
+	ConstantBufferD3D11 positionBuffer;
 
 	void MoveInDirection(float amount, const DirectX::XMFLOAT3& direction);
 	void RotateAroundAxis(float amount, const DirectX::XMFLOAT3& axis);
@@ -53,7 +54,8 @@ public:
 	const DirectX::XMFLOAT3& GetUp() const;
 
 	void UpdateInternalConstantBuffer(ID3D11DeviceContext* context);
-	ID3D11Buffer* GetConstantBuffer() const;
+	ID3D11Buffer* GetVPBuffer() const;
+	ID3D11Buffer* GetPositionBuffer() const;
 
 	DirectX::XMFLOAT4X4 GetViewProjectionMatrix() const;
 };

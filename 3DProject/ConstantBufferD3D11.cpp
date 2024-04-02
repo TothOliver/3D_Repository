@@ -8,7 +8,8 @@ ConstantBufferD3D11::ConstantBufferD3D11(ID3D11Device* device, size_t byteSize, 
 
 ConstantBufferD3D11::~ConstantBufferD3D11()
 {
-	//this->buffer->Release();
+	if(this->buffer != nullptr)
+		this->buffer->Release();
 }
 
 ConstantBufferD3D11::ConstantBufferD3D11(ConstantBufferD3D11&& other) noexcept
@@ -38,7 +39,9 @@ void ConstantBufferD3D11::Initialize(ID3D11Device* device, size_t byteSize, void
 	cameraData.SysMemPitch = 0;
 	cameraData.SysMemSlicePitch = 0;
 
-	device->CreateBuffer(&constBufferDesc, &cameraData, &this->buffer);
+	if (FAILED(device->CreateBuffer(&constBufferDesc, &cameraData, &this->buffer))) {
+		printf("hehe");
+	}
 }
 
 size_t ConstantBufferD3D11::GetSize() const
