@@ -9,13 +9,8 @@ struct Material
 	ID3D11ShaderResourceView* ambientTexture = nullptr;
 	ID3D11ShaderResourceView* diffuseTexture = nullptr;
 	ID3D11ShaderResourceView* specularTexture = nullptr;
-	ID3D11ShaderResourceView* emissionTexture = nullptr;
-
-	union
-	{
-		ID3D11ShaderResourceView* normalTexture = nullptr;
-		ID3D11ShaderResourceView* displacementTexture;
-	} surfaceMapping;
+	ID3D11ShaderResourceView* normalTexture = nullptr;
+	ID3D11ShaderResourceView* heightTexture = nullptr;
 
 	std::string name;
 

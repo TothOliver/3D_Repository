@@ -1,0 +1,6 @@
+newmtl floor
+map_Ka brickdiffuse.png
+norm bricknormal.png
+map_Kd brickdiffuse.png
+map_Ks brickspecular.png
+Ns 10

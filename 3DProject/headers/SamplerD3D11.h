@@ -20,8 +20,7 @@ public:
 	SamplerD3D11(SamplerD3D11&& other) = delete;
 	SamplerD3D11& operator=(SamplerD3D11&& other) = delete;
 
-	void Initialize(ID3D11Device* device, D3D11_TEXTURE_ADDRESS_MODE adressMode,
-		std::optional<std::array<float, 4>> borderColour = std::nullopt);
+	void Initialize(ID3D11Device* device, D3D11_TEXTURE_ADDRESS_MODE adressMode, std::optional<std::array<float, 4>> borderColour);
 
 	ID3D11SamplerState* GetSamplerState() const;
 };

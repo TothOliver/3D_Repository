@@ -1,4 +1,4 @@
-#include "headers/D3D11Helper.h"
+﻿#include "headers/D3D11Helper.h"
 
 bool CreateInterfaces(ID3D11Device*& device, ID3D11DeviceContext*& immediateContext, IDXGISwapChain*& swapChain, UINT width, UINT height, HWND window)
 
@@ -23,7 +23,7 @@ bool CreateInterfaces(ID3D11Device*& device, ID3D11DeviceContext*& immediateCont
 	swapChainDesc.SampleDesc.Count = 1;
 	swapChainDesc.SampleDesc.Quality = 0;
 
-	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	swapChainDesc.BufferUsage = DXGI_USAGE_UNORDERED_ACCESS;
 	swapChainDesc.BufferCount = 2;
 	swapChainDesc.OutputWindow = window;
 	swapChainDesc.Windowed = true;
@@ -35,7 +35,7 @@ bool CreateInterfaces(ID3D11Device*& device, ID3D11DeviceContext*& immediateCont
 	return !(FAILED(hr));
 }
 
-bool CreateRenderTargetView(ID3D11Device* device, IDXGISwapChain* swapChain, ID3D11RenderTargetView*& rtv)
+bool CreateUnorderedAccessView(ID3D11Device* device, IDXGISwapChain* swapChain, ID3D11UnorderedAccessView*& uav)
 {
 	// get the address of the back buffer
 	ID3D11Texture2D* backBuffer = nullptr;
@@ -47,14 +47,16 @@ bool CreateRenderTargetView(ID3D11Device* device, IDXGISwapChain* swapChain, ID3
 
 	// use the back buffer address to create the render target
 	// null as description to base it on the backbuffers values
-	HRESULT hr = device->CreateRenderTargetView(backBuffer, NULL, &rtv);
+	HRESULT hr = device->CreateUnorderedAccessView(backBuffer, NULL, &uav);
 	backBuffer->Release();
 	return !(FAILED(hr));
 
 }
 
-bool CreateDepthStencil(ID3D11Device* device, UINT width, UINT height, ID3D11Texture2D*& dsTexture, ID3D11DepthStencilView*& dsView)
+bool CreateDepthStencil(ID3D11Device* device, UINT width, UINT height, ID3D11DepthStencilView*& dsView)
 {
+	ID3D11Texture2D* dsTexture;
+
 	D3D11_TEXTURE2D_DESC textureDesc;
 	textureDesc.Width = width;
 	textureDesc.Height = height;
@@ -74,6 +76,9 @@ bool CreateDepthStencil(ID3D11Device* device, UINT width, UINT height, ID3D11Tex
 	}
 
 	HRESULT hr = device->CreateDepthStencilView(dsTexture, 0, &dsView);
+
+	dsTexture->Release();
+
 	return !(FAILED(hr));
 }
 
@@ -87,9 +92,13 @@ void SetViewport(D3D11_VIEWPORT& viewport, UINT width, UINT height)
 	viewport.MaxDepth = 1;
 }
 
+void BindGBuffer(ID3D11RenderTargetView* rtv[], const unsigned int NrOfGBuffer, ID3D11DeviceContext*& immediateContext){
+	//immediateContext->OMSetRenderTargets(NrOfGBuffer, rtv, dsView);
+}
+
 bool SetupD3D11(UINT width, UINT height, HWND window, ID3D11Device*& device,
-	ID3D11DeviceContext*& immediateContext, IDXGISwapChain*& swapChain, ID3D11RenderTargetView*& rtv,
-	ID3D11Texture2D*& dsTexture, ID3D11DepthStencilView*& dsView, D3D11_VIEWPORT& viewport)
+	ID3D11DeviceContext*& immediateContext, IDXGISwapChain*& swapChain, ID3D11UnorderedAccessView*& uav, 
+	ID3D11DepthStencilView*& dsView, D3D11_VIEWPORT& viewport)
 {
 	if (!CreateInterfaces(device, immediateContext, swapChain, width, height, window))
 	{
@@ -97,13 +106,13 @@ bool SetupD3D11(UINT width, UINT height, HWND window, ID3D11Device*& device,
 		return false;
 	}
 
-	if (!CreateRenderTargetView(device, swapChain, rtv))
+	if (!CreateUnorderedAccessView(device, swapChain, uav))
 	{
 		std::cerr << "Error creating rtv!" << std::endl;
 		return false;
 	}
 
-	if (!CreateDepthStencil(device, width, height, dsTexture, dsView))
+	if (!CreateDepthStencil(device, width, height, dsView))
 	{
 		std::cerr << "Error creating depth stencil view!" << std::endl;
 		return false;

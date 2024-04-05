@@ -5,21 +5,45 @@
 
 using namespace DirectX;
 
-MeshD3D11::MeshD3D11(ID3D11Device*& device, std::string filename, float worldX, float worldY, float worldZ, float scale)
+MeshD3D11::MeshD3D11(ID3D11Device*& device, std::string filename, float worldX, float worldY, float worldZ, float scale, bool reflective, UINT reflectionDetail, UINT radius)
 {
+	this->reflective = reflective;
+	this->texCube = new TextureCube();
+
+	if (reflective)
+	{
+		this->texCube->Initialize(device, reflectionDetail, radius, {worldX, worldY, worldZ});
+	}
+
 	MeshData mData;
-	ParseObj(device, filename, mData.vertexData, mData.indexData, this->subMeshes);
+	ParseObj(device, filename, mData.vertexData, mData.indexData, this->subMeshes, this->mData.materials);
 
-	this->vertexBuffer.Initialize(device, 8, mData.vertexData.size() / 8, mData.vertexData.data());
+	this->vertexBuffer.Initialize(device, 11, mData.vertexData.size() / 11, mData.vertexData.data());
 
-	this->indexBuffer.Initialize(device, mData.indexData.size(), mData.indexData.data());
+	XMFLOAT4X4 world;
+	XMStoreFloat4x4(&world, XMMatrixTranspose(XMMatrixMultiply(XMMatrixScaling(scale, scale, scale), XMMatrixTranslation(worldX, worldY, worldZ))));
+	this->worldMatrixBuffer.Initialize(device, sizeof(XMFLOAT4X4), &world);
+}
 
-	XMFLOAT4X4 world[2];
-	XMStoreFloat4x4(&world[0], XMMatrixTranspose(XMMatrixTranslation(worldX, worldY, worldZ)));
-	XMMATRIX view = XMMatrixLookAtLH({ 0, 0, -10 }, { 0, 0, 0 }, { 0, 1, 0 });
-	XMMATRIX proj = XMMatrixPerspectiveFovLH(1, 16.0f / 9, 1, 20);
-	XMStoreFloat4x4(&world[1], XMMatrixTranspose(XMMatrixMultiply(view, proj)));
-	this->worldMatrixBuffer.Initialize(device, sizeof(XMFLOAT4X4) * 2, &world);
+MeshD3D11::~MeshD3D11()
+{
+	delete texCube;
+
+	for (size_t i = 0; i < subMeshes.size(); i++)
+	{
+		delete subMeshes.at(i);
+		subMeshes.at(i) = nullptr;
+	}
+
+	for (size_t i = 0; i < this->mData.materials.size(); i++)
+	{
+		this->mData.materials.at(i).ambientTexture->Release();
+		this->mData.materials.at(i).diffuseTexture->Release();
+		this->mData.materials.at(i).specularTexture->Release();
+		this->mData.materials.at(i).heightTexture->Release();
+		this->mData.materials.at(i).normalTexture->Release();
+	}
+
 }
 
 void MeshD3D11::BindMeshBuffers(ID3D11DeviceContext* context) const
@@ -32,7 +56,19 @@ void MeshD3D11::BindMeshBuffers(ID3D11DeviceContext* context) const
 	context->IASetVertexBuffers(0, 1, &vBuffer, &stride, &offset);
 	context->VSSetConstantBuffers(0, 1, &worldViewProj);
 
-	this->subMeshes.at(0).PerformDrawCall(context);
-	context->Draw(this->vertexBuffer.GetNrOfVertices(), 0);
+
+	for (size_t i = 0; i < subMeshes.size(); i++)
+	{
+		this->subMeshes.at(i)->PerformDrawCall(context);
+	}
 }
 
+bool MeshD3D11::IsReflective() const
+{
+	return this->reflective;
+}
+
+TextureCube* MeshD3D11::GetTextureCube() const
+{
+	return this->texCube;
+}
