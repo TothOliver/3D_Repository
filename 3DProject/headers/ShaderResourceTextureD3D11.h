@@ -22,4 +22,5 @@ public:
 	void Initialize(ID3D11Device* device, const char* pathToTextureFile);
 
 	ID3D11ShaderResourceView* GetSRV() const;
+	ID3D11Texture2D* GetTEXT() const;
 };

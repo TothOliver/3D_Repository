@@ -1,0 +1,7 @@
+newmtl stone
+map_Kn stoneWallNormal.jpg
+map_Kd stoneWallDiffuse.jpg
+map_Ks stoneWallSpecular.jpg
+map_Kh stoneWallHeight.jpg
+map_Ka stoneWallAmbient.jpg
+Ns 10

@@ -10,15 +10,19 @@
 #include "headers/ShaderLoader.h"
 #include "headers/InputLayoutD3D11.h"
 #include "headers/SamplerD3D11.h"
-#include "headers/ShaderResourceTextureD3D11.h"
 #include "headers/CameraD3D11.h"
+#include "headers/GBuffer.h"
 
 #include "headers/Parser.h"
 #include "headers/SceneManager.h"
 #include <DirectXMath.h>
+#include "headers/Render.h"
+#include "headers/TextureCube.h"
+#include <chrono>
 
-#define CAMERA_SPEED 0.002f
-#define CAMERA_ROTATION_SPEED 0.002
+#define CAMERA_SPEED 8
+#define CAMERA_ROTATION_SPEED 0.01
+#define REFLECTION_RESOLUTION 512
 
 using namespace DirectX;
 
@@ -33,8 +37,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	ID3D11Device* device;
 	ID3D11DeviceContext* immediateContext;
 	IDXGISwapChain* swapChain;
-	ID3D11RenderTargetView* rtv;
-	ID3D11Texture2D* dsTexture;
+	ID3D11UnorderedAccessView* uav = {};
 	ID3D11DepthStencilView* dsView;
 
 	if (!SetupWindow(hInstance, WIDTH, HEIGHT, nCmdShow, window))
@@ -43,24 +46,26 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		return -1;
 	}
 	
-	if (!SetupD3D11(WIDTH, HEIGHT, window, device, immediateContext, swapChain, rtv, dsTexture, dsView, viewport))
+	if (!SetupD3D11(WIDTH, HEIGHT, window, device, immediateContext, swapChain, uav, dsView, viewport))
 	{
 		std::cerr << "Error: SetupD3D11" << std::endl;
 		return -1;
 	}
 
+	
 
+	
 	ShaderD3D11 vertexShader;
-	ShaderD3D11 pixelShader;
+	ShaderD3D11 computeShader;
 	InputLayoutD3D11 inputLayout;
-	ShaderResourceTextureD3D11 srt;
-	SamplerD3D11 sampler;
+	SamplerD3D11 textureSampler;
+	SamplerD3D11 shadowSampler;
 
-	std::string vShaderByteCode;
+	ShaderD3D11 ps[2];
 
 	//Initialize camera with desired values
 	CameraD3D11 camera;
-	camera.Initialize(device, { 1, (float)16 / 9, 1, 100 }, { 0, 0, -10.0f });
+	camera.Initialize(device, { 1, (float)16 / 9, 0.05, 100 }, { 0, 0, 0 });
 
 	//Create variables for storing mouse input information and more
 	ID3D11Buffer* vpBuffer;
@@ -68,52 +73,54 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	RECT rect;
 	LPRECT lpRect = &rect;
 	ShowCursor(false);
+	GetWindowRect(window, lpRect);
 
-	if (!ShaderLoader(device, immediateContext, vertexShader, pixelShader, inputLayout, srt, sampler))
+	if (!ShaderLoader(device, immediateContext, vertexShader, computeShader, ps[0], ps[1], inputLayout, textureSampler, shadowSampler))
 	{
 		std::cerr << "Error: SetupD3D11" << std::endl;
 		return -1;
 	}
 
-	std::vector<Scene> scenes;
+	std::vector<Scene*> scenes;
 	CreateScenes(device, scenes);
 	int sceneIndex = 0;
 
+	float deltaTime = 1;
+
 	while (!(GetKeyState(VK_ESCAPE) & 0x8000) && msg.message != WM_QUIT)
 	{
+		auto t0 = std::chrono::system_clock::now();
+
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
 
-		GetWindowRect(window, lpRect);
-
 		if (GetAsyncKeyState(0x57) & 0x8000) // W key
 		{
-			camera.MoveForward(CAMERA_SPEED);
+			camera.MoveForward(CAMERA_SPEED * deltaTime);
 		}
 		if (GetAsyncKeyState(0x53) & 0x8000) // S key
 		{
-			camera.MoveForward(-CAMERA_SPEED);
+			camera.MoveForward(-CAMERA_SPEED * deltaTime);
 		}
 		if (GetAsyncKeyState(0x41) & 0x8000) // A key
 		{
-			camera.MoveRight(-CAMERA_SPEED);
+			camera.MoveRight(-CAMERA_SPEED * deltaTime);
 		}
 		if (GetAsyncKeyState(0x44) & 0x8000)
 		{
-			camera.MoveRight(CAMERA_SPEED); // D key
+			camera.MoveRight(CAMERA_SPEED * deltaTime); // D key
 		}
 		if (GetAsyncKeyState(VK_SPACE) & 0x8000)
 		{
-			camera.MoveUp(CAMERA_SPEED); // Space
+			camera.MoveUp(CAMERA_SPEED * deltaTime); // Space
 		}
 		if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
 		{
-			camera.MoveUp(-CAMERA_SPEED); //Shift
+			camera.MoveUp(-CAMERA_SPEED * deltaTime); //Shift
 		}
-
 
 		if (GetCursorPos(&p))
 		{
@@ -134,7 +141,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 			}
 			else if (p.y < windowCenterY - 2)
 			{
-
 				camera.RotateRight((p.y - windowCenterY) * CAMERA_ROTATION_SPEED);
 			}
 
@@ -144,38 +150,80 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		//Updating camera position
 		camera.UpdateInternalConstantBuffer(immediateContext);
 
-		vpBuffer = camera.GetConstantBuffer();
-
-		immediateContext->VSSetConstantBuffers(1, 1, &vpBuffer);
-
-		float clearColour[4] = { 0.3, 0.3, 0.3, 0 };
-		immediateContext->ClearRenderTargetView(rtv, clearColour);
-		immediateContext->ClearDepthStencilView(dsView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
-		
-		immediateContext->IASetInputLayout(inputLayout.GetInputLayout());
-		immediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-		ID3D11SamplerState* sState = sampler.GetSamplerState();
-		immediateContext->PSSetSamplers(0, 1, &sState);
-
+		//shadow mapping
 		vertexShader.BindShader(immediateContext);
+		ID3D11SamplerState* cState = shadowSampler.GetSamplerState();
+		immediateContext->CSSetSamplers(0, 1, &cState);
+
+		Scene* currentScene = scenes.at(sceneIndex);
 
 		immediateContext->RSSetViewports(1, &viewport);
+		ID3D11InputLayout* il = inputLayout.GetInputLayout();
+		immediateContext->IASetInputLayout(il);
+		immediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		pixelShader.BindShader(immediateContext);
+		//Render shadow maps for spotlights
+		for (UINT lightIndex = 0; lightIndex < currentScene->GetNrOfLights(SPOTLIGHT); lightIndex++)
+		{
+			ID3D11DepthStencilView* dsv = currentScene->GetShadowMapDSV(SPOTLIGHT, lightIndex);
+			immediateContext->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
+			immediateContext->OMSetRenderTargets(0, nullptr, dsv);
 
-		immediateContext->OMSetRenderTargets(1, &rtv, dsView);
+			ID3D11Buffer* cameraConstantBuffer = currentScene->GetLightCameraConstantBuffer(SPOTLIGHT, lightIndex);
+			immediateContext->VSSetConstantBuffers(1, 1, &cameraConstantBuffer);
 
-		scenes.at(sceneIndex).DrawScene(immediateContext);
+			currentScene->DrawScene(immediateContext, nullptr, true);
 
-		if ((GetAsyncKeyState(0x31) & 0x0101)) //A key
+			dsv = nullptr;
+			immediateContext->OMSetRenderTargets(0, nullptr, dsv);
+		}
+
+		//Render shadow maps for directional lights
+		for (UINT lightIndex = 0; lightIndex < scenes.at(sceneIndex)->GetNrOfLights(DIRECTIONAL); lightIndex++)
+		{
+			ID3D11DepthStencilView* dsv = currentScene->GetShadowMapDSV(DIRECTIONAL, lightIndex);
+			immediateContext->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
+			immediateContext->OMSetRenderTargets(0, nullptr, dsv);
+
+			ID3D11Buffer* cameraConstantBuffer = currentScene->GetLightCameraConstantBuffer(DIRECTIONAL, lightIndex); //new
+			immediateContext->VSSetConstantBuffers(1, 1, &cameraConstantBuffer);
+
+			currentScene->DrawScene(immediateContext, nullptr, true);
+
+			dsv = nullptr;
+			immediateContext->OMSetRenderTargets(0, nullptr, dsv);
+		}
+
+		computeShader.BindShader(immediateContext);
+
+		//Cubemap rendering
+		for (size_t i = 0; i < scenes.at(sceneIndex)->GetNrOfMeshes(); i++)
+		{
+			MeshD3D11* mesh = scenes.at(sceneIndex)->GetMeshAt(i);
+			if (mesh->IsReflective())
+			{
+				TextureCube* cubeMap = mesh->GetTextureCube();
+
+				//Iterate for each side in cubemap
+				for (size_t side = 0; side < 6; side++)
+				{
+					RenderToTargetUAV(device, immediateContext, cubeMap->GetCubeUAV(side), cubeMap->GetCubeSideLength(), cubeMap->GetCubeSideLength(),
+						cubeMap->GetCubeDSV(), inputLayout.GetInputLayout(), textureSampler.GetSamplerState(), cubeMap->GetCubeViewport(), cubeMap->GetCameraVPBuffer(side),
+						cubeMap->GetCameraPOSBuffer(side), scenes, sceneIndex, 1, ps);
+				}
+			}
+		}
+
+		//Render scene at sceneIndex
+		RenderToTargetUAV(device, immediateContext, uav, WIDTH, HEIGHT, dsView, inputLayout.GetInputLayout(), 
+			textureSampler.GetSamplerState(), viewport, camera.GetVPBuffer(), camera.GetPositionBuffer(), scenes, sceneIndex, 0, ps);
+
+		immediateContext->PSSetShader(nullptr, nullptr, 0);
+
+		if ((GetAsyncKeyState(0x31) & 0x0101)) //1 key
 			sceneIndex--;
-		if ((GetAsyncKeyState(0x32) & 0x0101)) //D key
+		if ((GetAsyncKeyState(0x32) & 0x0101)) //2 key
 			sceneIndex++;
-
-
-		if ((GetAsyncKeyState(0x50) & 0x0101)) //P key
-
 
 		if (sceneIndex < 0)
 			sceneIndex = 0;
@@ -183,14 +231,22 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 			sceneIndex = scenes.size() - 1;
 
 		swapChain->Present(0, 0);
+
+		auto t1 = std::chrono::system_clock::now();
+		auto float_secs = std::chrono::duration_cast<std::chrono::duration<float>>(t1 - t0);
+		deltaTime = float_secs.count();
 	}
 
 	device->Release();
 	immediateContext->Release();
 	swapChain->Release();
-	rtv->Release();
-	dsTexture->Release();
 	dsView->Release();
+	uav->Release();
+
+	for (size_t i = 0; i < scenes.size(); i++)
+	{
+		scenes.at(i)->~Scene();
+	}
 
 	return true;
 }

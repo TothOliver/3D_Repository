@@ -10,16 +10,16 @@ SamplerD3D11::~SamplerD3D11()
 	this->samplerState->Release();
 }
 
-void SamplerD3D11::Initialize(ID3D11Device* device, D3D11_TEXTURE_ADDRESS_MODE adressMode, std::optional<std::array<float, 4>> borderColour)
+void SamplerD3D11::Initialize(ID3D11Device* device, D3D11_TEXTURE_ADDRESS_MODE adressMode, std::optional<std::array<float, 4>> borderColour, D3D11_FILTER filter, D3D11_COMPARISON_FUNC comparisonFunc)
 {
 	D3D11_SAMPLER_DESC sampler;
-	sampler.Filter = D3D11_FILTER_ANISOTROPIC;
+	sampler.Filter = filter;
 	sampler.AddressU = adressMode;
 	sampler.AddressV = adressMode;
 	sampler.AddressW = adressMode;
 	sampler.MipLODBias = 1;
 	sampler.MaxAnisotropy = 16;
-	sampler.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	sampler.ComparisonFunc = comparisonFunc;
 	sampler.BorderColor[0] = borderColour.value()[0];
 	sampler.BorderColor[1] = borderColour.value()[1];
 	sampler.BorderColor[2] = borderColour.value()[2];

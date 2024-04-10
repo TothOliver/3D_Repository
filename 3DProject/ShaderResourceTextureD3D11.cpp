@@ -48,10 +48,14 @@ void ShaderResourceTextureD3D11::Initialize(ID3D11Device* device, const char* pa
 	texture.CPUAccessFlags = 0;
 	texture.MiscFlags = 0;
 
-	device->CreateTexture2D(&texture, &imagedata, &this->texture);
+	if (FAILED(device->CreateTexture2D(&texture, &imagedata, &this->texture))) {
+		printf("oj");
+	}
 
 	if(this->texture != 0)
-		device->CreateShaderResourceView(this->texture, nullptr, &srv);
+		if (FAILED(device->CreateShaderResourceView(this->texture, nullptr, &srv))) {
+			printf("oj");
+		}
 }
 
 ID3D11ShaderResourceView* ShaderResourceTextureD3D11::GetSRV() const

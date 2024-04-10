@@ -16,7 +16,7 @@ private:
 
 public:
 	SubMeshD3D11(Material mat, size_t startIndex, size_t nrOfIndicies);
-	~SubMeshD3D11();
+	~SubMeshD3D11() = default;
 	SubMeshD3D11(const SubMeshD3D11& other) = default;
 	SubMeshD3D11& operator=(const SubMeshD3D11& other) = default;
 	SubMeshD3D11(SubMeshD3D11&& other) = default;
@@ -31,8 +31,6 @@ public:
 	ID3D11ShaderResourceView* GetAmbientSRV() const;
 	ID3D11ShaderResourceView* GetDiffuseSRV() const;
 	ID3D11ShaderResourceView* GetSpecularSRV() const;
-	ID3D11ShaderResourceView* GetEmissionSRV() const;
-	ID3D11ShaderResourceView* GetDisplacementSRV() const;
-	ID3D11ShaderResourceView* GetParallaxSRV() const;
+	ID3D11ShaderResourceView* GetHeightSRV() const;
 	ID3D11ShaderResourceView* GetNormalSRV() const;
 };

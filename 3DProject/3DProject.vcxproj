@@ -133,61 +133,72 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="CameraD3D11.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="ConstantBufferD3D11.cpp" />
-    <ClCompile Include="D3D11Helper.cpp" />
-    <ClCompile Include="IndexBufferD3D11.cpp" />
-    <ClCompile Include="InputLayoutD3D11.cpp" />
-    <ClCompile Include="Main.cpp" />
-    <ClCompile Include="MeshD3D11.cpp" />
-    <ClCompile Include="Parser.cpp" />
-    <ClCompile Include="RenderTargetD3D11.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="SamplerD3D11.cpp" />
-    <ClCompile Include="SceneManager.cpp" />
-    <ClCompile Include="ShaderD3D11.cpp" />
-    <ClCompile Include="ShaderLoader.cpp" />
-    <ClCompile Include="ShaderResourceTextureD3D11.cpp" />
-    <ClCompile Include="SubMeshD3D11.cpp" />
-    <ClCompile Include="VertexBufferD3D11.cpp" />
-    <ClCompile Include="Window.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="headers\CameraD3D11.h" />
-    <ClInclude Include="headers\ConstantBufferD3D11.h" />
-    <ClInclude Include="headers\D3D11Helper.h" />
-    <ClInclude Include="headers\DepthBufferD3D11.h" />
-    <ClInclude Include="headers\IndexBufferD3D11.h" />
-    <ClInclude Include="headers\InputLayoutD3D11.h" />
-    <ClInclude Include="headers\Material.h" />
-    <ClInclude Include="headers\MeshD3D11.h" />
-    <ClInclude Include="headers\Parser.h" />
-    <ClInclude Include="headers\RenderTargetD3D11.h" />
-    <ClInclude Include="headers\SamplerD3D11.h" />
-    <ClInclude Include="headers\SceneManager.h" />
-    <ClInclude Include="headers\ShaderD3D11.h" />
-    <ClInclude Include="headers\ShaderLoader.h" />
-    <ClInclude Include="headers\ShaderResourceTextureD3D11.h" />
-    <ClInclude Include="headers\SpotLightCollectionD3D11.h" />
-    <ClInclude Include="headers\stb_image.h" />
-    <ClInclude Include="headers\StructuredBufferD3D11.h" />
-    <ClInclude Include="headers\SubMeshD3D11.h" />
-    <ClInclude Include="headers\VertexBufferD3D11.h" />
-    <ClInclude Include="headers\Window.h" />
-  </ItemGroup>
-  <ItemGroup>
+    <FxCompile Include="shaders\ComputeShader.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+    </FxCompile>
     <FxCompile Include="shaders\PixelShader.hlsl">
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\%(Filename).cso</ObjectFileOutput>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaders\PSReflections.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
     </FxCompile>
     <FxCompile Include="shaders\VertexShader.hlsl">
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\%(Filename).cso</ObjectFileOutput>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="headers\CameraD3D11.h" />
+    <ClInclude Include="headers\ConstantBufferD3D11.h" />
+    <ClInclude Include="headers\D3D11Helper.h" />
+    <ClInclude Include="headers\DepthBufferD3D11.h" />
+    <ClInclude Include="headers\GBuffer.h" />
+    <ClInclude Include="headers\InputLayoutD3D11.h" />
+    <ClInclude Include="headers\LightCollectionD3D11.h" />
+    <ClInclude Include="headers\Material.h" />
+    <ClInclude Include="headers\MeshD3D11.h" />
+    <ClInclude Include="headers\Parser.h" />
+    <ClInclude Include="headers\Render.h" />
+    <ClInclude Include="headers\RenderTargetD3D11.h" />
+    <ClInclude Include="headers\SamplerD3D11.h" />
+    <ClInclude Include="headers\Scene.h" />
+    <ClInclude Include="headers\SceneManager.h" />
+    <ClInclude Include="headers\ShaderD3D11.h" />
+    <ClInclude Include="headers\ShaderLoader.h" />
+    <ClInclude Include="headers\ShaderResourceTextureD3D11.h" />
+    <ClInclude Include="headers\stb_image.h" />
+    <ClInclude Include="headers\StructuredBufferD3D11.h" />
+    <ClInclude Include="headers\SubMeshD3D11.h" />
+    <ClInclude Include="headers\TextureCube.h" />
+    <ClInclude Include="headers\VertexBufferD3D11.h" />
+    <ClInclude Include="headers\Window.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="CameraD3D11.cpp" />
+    <ClCompile Include="ConstantBufferD3D11.cpp" />
+    <ClCompile Include="D3D11Helper.cpp" />
+    <ClCompile Include="DepthBufferD3D11.cpp" />
+    <ClCompile Include="GBuffer.cpp" />
+    <ClCompile Include="InputLayoutD3D11.cpp" />
+    <ClCompile Include="LightCollectionD3D11.cpp" />
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="MeshD3D11.cpp" />
+    <ClCompile Include="Parser.cpp" />
+    <ClCompile Include="Render.cpp" />
+    <ClCompile Include="RenderTargetD3D11.cpp" />
+    <ClCompile Include="SamplerD3D11.cpp" />
+    <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="SceneManager.cpp" />
+    <ClCompile Include="ShaderD3D11.cpp" />
+    <ClCompile Include="ShaderLoader.cpp" />
+    <ClCompile Include="ShaderResourceTextureD3D11.cpp" />
+    <ClCompile Include="StructuredBufferD3D11.cpp" />
+    <ClCompile Include="SubMeshD3D11.cpp" />
+    <ClCompile Include="TextureCube.cpp" />
+    <ClCompile Include="VertexBufferD3D11.cpp" />
+    <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
