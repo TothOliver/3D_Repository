@@ -81,7 +81,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 	std::vector<Scene*> scenes;
 	CreateScenes(device, scenes);
-	int sceneIndex = 0;
+	int sceneIndex = 2;
 
 	float deltaTime = 1;
 

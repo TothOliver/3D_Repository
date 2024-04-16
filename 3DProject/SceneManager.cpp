@@ -37,10 +37,8 @@ void CreateScenes(ID3D11Device* device, std::vector<Scene*>& scenes)
 	scene2->AddObject(invCube);
 
 	Scene* scene3 = new Scene();
-	/*MeshD3D11* axe = new MeshD3D11(device, "car.obj", 0, 0, 0, 2);
-	scene3->AddObject(axe);*/
-
-	
+	MeshD3D11* axe = new MeshD3D11(device, "axe.obj", 0, 0, 0, 2);
+	scene3->AddObject(axe);
 
 	scenes.push_back(scene1);
 	scenes.push_back(scene2);
@@ -53,7 +51,7 @@ void CreateScenes(ID3D11Device* device, std::vector<Scene*>& scenes)
 	LightData light4;
 
 	light0.initialPosition = { 0, 10, 0 , 0 };
-	light0.intensity = { 0.4, 0.8, 1, 0 };
+	light0.intensity = { 0.7, 0.8, 1, 0 };
 	light0.rotationX = 0;
 	light0.rotationY = -DirectX::XM_PIDIV2;
 	light0.directionalLight = true;
@@ -61,42 +59,20 @@ void CreateScenes(ID3D11Device* device, std::vector<Scene*>& scenes)
 	light0.farZ = 100.0f;
 	light0.angle = 1;
 
-	light1.intensity = { 0.3, 10, 2, 0 };
-	light1.rotationY = -DirectX::XM_PIDIV2;
-	light1.rotationX = 0;
+	light1.intensity = { 0.3, 1, 2, 0 };
+	light1.rotationY = 0;
+	light1.rotationX = -DirectX::XM_PIDIV2;
 	light1.angle = 1;
-	light1.initialPosition = { 0, 8, 0, 0 };
+	light1.initialPosition = { 3, 1, 2, 0 };
 	light1.nearZ = 0.01;
 	light1.farZ = 100;
 
-	light2.intensity = { 0.7, 1.4, 1.5, 0 };
-	light2.rotationX = DirectX::XM_PI;
-	light2.rotationY = 0;
-	light2.angle = 0.5;
-	light2.initialPosition = { 0, 1, -1, 0 };
-
-	light3.intensity = { 0.7, 1, 0.5, 0 };
-	light3.rotationX = 0;
-	light3.rotationY = DirectX::XM_PIDIV2;
-	light3.angle = 2;
-	light3.initialPosition = { 0, 1, 0, 0 };
-
-	light4.directionalLight = true;
-	light4.intensity = { 0.5, 1, 1, 0 };
-	light4.rotationX = -DirectX::XM_PIDIV2;
-	light4.rotationY = 0;
-	light4.angle = 2;
-	light4.initialPosition = { 2, 1, 2, 0 };
-
-	scene1->AddLight(device, light1);
-	scene1->AddLight(device, light2);
-	scene1->AddLight(device, light3);
+	scene1->AddLight(device, light0);
 
 	scene2->AddLight(device, light0);
 
-	scene2->AddLight(device, light4);
-
-	scene3->AddLight(device, light4);
+	scene3->AddLight(device, light0);
+	scene3->AddLight(device, light1);
 
 	scene1->InitializeParticleEmitter(device, 1000, DirectX::XMFLOAT3(0, 2, 0), DirectX::XM_PIDIV2 / 4, 10, 0.003, SMOKE);
 	scene1->InitializeParticleEmitter(device, 1000, DirectX::XMFLOAT3(0, 0, 0), 0, 20, 0.05, RAIN);

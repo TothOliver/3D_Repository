@@ -5,7 +5,7 @@
 
 using namespace DirectX;
 
-MeshD3D11::MeshD3D11(ID3D11Device*& device, std::string filename, float worldX, float worldY, float worldZ, float scale, bool reflective, UINT reflectionDetail, UINT radius)
+MeshD3D11::MeshD3D11(ID3D11Device* device, std::string filename, float worldX, float worldY, float worldZ, float scale, bool reflective, UINT reflectionDetail, UINT radius)
 {
 	this->reflective = reflective;
 	this->texCube = new TextureCube();
@@ -17,6 +17,11 @@ MeshD3D11::MeshD3D11(ID3D11Device*& device, std::string filename, float worldX, 
 
 	MeshData mData;
 	ParseObj(device, filename, mData.vertexData, mData.indexData, this->subMeshes, this->mData.materials);
+
+	for (size_t i = 0; i < this->subMeshes.size(); i++)
+	{
+		this->subMeshes.at(i)->Initialize(device);
+	}
 
 	this->vertexBuffer.Initialize(device, 11, mData.vertexData.size() / 11, mData.vertexData.data());
 
