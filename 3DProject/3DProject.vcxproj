@@ -133,19 +133,31 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <FxCompile Include="shaders\ComputeShader.hlsl">
+    <FxCompile Include="shaders\CSDefault.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
     </FxCompile>
-    <FxCompile Include="shaders\PixelShader.hlsl">
+    <FxCompile Include="Shaders\GSParticles.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Geometry</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaders\PSDefault.hlsl">
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\%(Filename).cso</ObjectFileOutput>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="Shaders\CSUpdateParticles.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+    </FxCompile>
+    <FxCompile Include="Shaders\PSParticles.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
     </FxCompile>
     <FxCompile Include="shaders\PSReflections.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
     </FxCompile>
-    <FxCompile Include="shaders\VertexShader.hlsl">
+    <FxCompile Include="shaders\VSDefault.hlsl">
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\%(Filename).cso</ObjectFileOutput>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+    </FxCompile>
+    <FxCompile Include="Shaders\VSParticles.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
     </FxCompile>
   </ItemGroup>
@@ -160,6 +172,7 @@
     <ClInclude Include="headers\Material.h" />
     <ClInclude Include="headers\MeshD3D11.h" />
     <ClInclude Include="headers\Parser.h" />
+    <ClInclude Include="headers\ParticleSystem.h" />
     <ClInclude Include="headers\Render.h" />
     <ClInclude Include="headers\RenderTargetD3D11.h" />
     <ClInclude Include="headers\SamplerD3D11.h" />
@@ -186,6 +199,7 @@
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MeshD3D11.cpp" />
     <ClCompile Include="Parser.cpp" />
+    <ClCompile Include="ParticleSystem.cpp" />
     <ClCompile Include="Render.cpp" />
     <ClCompile Include="RenderTargetD3D11.cpp" />
     <ClCompile Include="SamplerD3D11.cpp" />

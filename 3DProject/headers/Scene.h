@@ -3,11 +3,13 @@
 #include "ShaderD3D11.h"
 #include "MeshD3D11.h"
 #include "LightCollectionD3D11.h"
+#include "ParticleSystem.h"
 
 class Scene
 {
 private:
 	std::vector<MeshD3D11*> objectsInScene;
+	std::vector<Emitter*> emitters;
 
 	LightCollectionD3D11 spotLights;
 	LightCollectionD3D11 directionalLights;
@@ -39,4 +41,10 @@ public:
 	ID3D11ShaderResourceView* GetLightBufferSRV(LIGHT_TYPE type);
 
 	void InitializeStructuredBuffer(ID3D11Device* device);
+
+	void InitializeParticleEmitter(ID3D11Device* device, UINT nrOfParticles, DirectX::XMFLOAT3 position, float maxAngle, float maxDistance, float speed, PARTICLE_TYPE type);
+
+	UINT GetEmitterCount() const;
+
+	Emitter* GetEmitterAt(UINT index) const;
 };

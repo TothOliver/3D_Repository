@@ -1,12 +1,17 @@
 #include "headers/ShaderLoader.h"
 
 
-bool CreateShaders(ID3D11Device* device, ID3D11DeviceContext* context, ShaderD3D11& vertexShader, ShaderD3D11& computeShader, ShaderD3D11& pixelShader, ShaderD3D11& psReflectionShader, InputLayoutD3D11& inputLayout)
+bool CreateShaders(ID3D11Device* device, ID3D11DeviceContext* context, ShaderD3D11& vertexShader, ShaderD3D11& computeShader, ShaderD3D11 pixelShaders[2], ShaderD3D11 particleShaders[4], InputLayoutD3D11& inputLayout)
 {
-    vertexShader.Initialize(device, ShaderType::VERTEX_SHADER, "shaders/VertexShader.cso");
-    computeShader.Initialize(device, ShaderType::COMPUTE_SHADER, "shaders/ComputeShader.cso");
-    pixelShader.Initialize(device, ShaderType::PIXEL_SHADER, "shaders/PixelShader.cso");
-    psReflectionShader.Initialize(device, ShaderType::PIXEL_SHADER, "shaders/PSReflections.cso");
+    vertexShader.Initialize(device, ShaderType::VERTEX_SHADER, "shaders/VSDefault.cso");
+    pixelShaders[0].Initialize(device, ShaderType::PIXEL_SHADER, "shaders/PSDefault.cso");
+    pixelShaders[1].Initialize(device, ShaderType::PIXEL_SHADER, "shaders/PSReflections.cso");
+    computeShader.Initialize(device, ShaderType::COMPUTE_SHADER, "shaders/CSDefault.cso");
+
+    particleShaders[0].Initialize(device, ShaderType::COMPUTE_SHADER, "shaders/CSUpdateParticles.cso");
+    particleShaders[1].Initialize(device, ShaderType::VERTEX_SHADER, "shaders/VSParticles.cso");
+    particleShaders[2].Initialize(device, ShaderType::GEOMETRY_SHADER, "shaders/GSParticles.cso");
+    particleShaders[3].Initialize(device, ShaderType::PIXEL_SHADER, "shaders/PSParticles.cso");
 
     return true;
 }
@@ -32,11 +37,11 @@ bool CreateSampler(ID3D11Device* device, SamplerD3D11& sampler, SamplerD3D11& sh
     return true;
 }
 
-bool ShaderLoader(ID3D11Device* device, ID3D11DeviceContext* context, ShaderD3D11& vertexShader, ShaderD3D11& computeShader, ShaderD3D11& pixelShader, ShaderD3D11& psReflectionShader,
+bool ShaderLoader(ID3D11Device* device, ID3D11DeviceContext* context, ShaderD3D11& vertexShader, ShaderD3D11& computeShader, ShaderD3D11 pixelShaders[2], ShaderD3D11 particleShaders[4],
     InputLayoutD3D11& inputLayout, SamplerD3D11& textureSampler, SamplerD3D11& shadowSampler)
 {
 
-    CreateShaders(device, context, vertexShader, computeShader, pixelShader, psReflectionShader, inputLayout);
+    CreateShaders(device, context, vertexShader, computeShader, pixelShaders, particleShaders, inputLayout);
     CreateInputLayout(inputLayout, device, vertexShader);
     CreateSampler(device, textureSampler, shadowSampler);
 

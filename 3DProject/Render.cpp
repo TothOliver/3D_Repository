@@ -9,8 +9,9 @@
 #include "headers/GBuffer.h"
 
 void RenderToTargetUAV(ID3D11Device* device, ID3D11DeviceContext* immediateContext, ID3D11UnorderedAccessView* uav,
-	const UINT WIDTH, const UINT HEIGHT, ID3D11DepthStencilView* dsView,  ID3D11InputLayout* inputLayout, ID3D11SamplerState* sampler, 
-	D3D11_VIEWPORT viewport, ID3D11Buffer* vpBuffer, ID3D11Buffer* cameraPosition, std::vector<Scene*>& scenes, int sceneIndex, int uavSlot, ShaderD3D11 ps[2])
+	const UINT WIDTH, const UINT HEIGHT, ID3D11DepthStencilView* dsView, ID3D11InputLayout* inputLayout, ID3D11SamplerState* sampler,
+	D3D11_VIEWPORT viewport, ID3D11Buffer* vpBuffer, ID3D11Buffer* cameraPosition, Scene* scene, int uavSlot,
+	ShaderD3D11& vs, ShaderD3D11& cs, ShaderD3D11 ps[2], ShaderD3D11 particleShaders[4])
 {
 	ID3D11RenderTargetView* rtv[3];
 	ID3D11ShaderResourceView* srv[3];
@@ -29,6 +30,7 @@ void RenderToTargetUAV(ID3D11Device* device, ID3D11DeviceContext* immediateConte
 
 	ID3D11RenderTargetView* RTVnull[3];
 	ID3D11ShaderResourceView* SRVnull[7];;
+	ID3D11UnorderedAccessView* UAVnull = nullptr;
 
 	float clear[4] = { 0, 0, 0, 1 };
 
@@ -45,19 +47,55 @@ void RenderToTargetUAV(ID3D11Device* device, ID3D11DeviceContext* immediateConte
 	immediateContext->ClearUnorderedAccessViewFloat(uav, clear);
 	immediateContext->ClearDepthStencilView(dsView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
 
+	//Same sampler is used for both particles pass and main pass
+	immediateContext->PSSetSamplers(0, 1, &sampler);
+
+	//Render particles for each emitter in scenee
+	for (size_t i = 0; i < scene->GetEmitterCount(); i++)
+	{
+		Emitter* currentEmitter = scene->GetEmitterAt(i);
+
+		//Draw particles
+		ID3D11ShaderResourceView* particleSRV = currentEmitter->GetBufferSRV();
+		ID3D11ShaderResourceView* particleTexture = currentEmitter->GetTextureSRV();
+
+		immediateContext->IASetInputLayout(nullptr);
+		immediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+		particleShaders[1].BindShader(immediateContext);
+
+		immediateContext->VSSetShaderResources(0, 1, &particleSRV);
+		particleShaders[2].BindShader(immediateContext);
+		immediateContext->GSSetConstantBuffers(0, 1, &cameraPosition);
+		immediateContext->GSSetConstantBuffers(1, 1, &vpBuffer);
+
+		immediateContext->RSSetViewports(1, &viewport);
+		immediateContext->PSSetShaderResources(0, 1, &particleTexture);
+		particleShaders[3].BindShader(immediateContext);
+
+		immediateContext->OMSetRenderTargets(3, rtv, dsView);
+		immediateContext->Draw(currentEmitter->GetNrOfParticles(), 0);
+
+		immediateContext->GSSetShader(nullptr, nullptr, 0);
+		ID3D11ShaderResourceView* nullSRV = nullptr;
+		immediateContext->VSSetShaderResources(0, 1, &nullSRV);
+	}
+
+	//Bind the shaders for the main render
+	vs.BindShader(immediateContext);
+	cs.BindShader(immediateContext);
+
 	immediateContext->VSSetConstantBuffers(1, 1, &vpBuffer);
 
 	immediateContext->IASetInputLayout(inputLayout);
 	immediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	immediateContext->PSSetSamplers(0, 1, &sampler);
 
 	immediateContext->PSSetConstantBuffers(0, 1, &cameraPosition);
 
 	immediateContext->RSSetViewports(1, &viewport);
 
 	immediateContext->OMSetRenderTargets(3, rtv, dsView);
-	scenes.at(sceneIndex)->DrawScene(immediateContext, ps, false);
+	scene->DrawScene(immediateContext, ps, false);
 	immediateContext->OMSetRenderTargets(3, RTVnull, nullptr);
 
 
@@ -70,23 +108,22 @@ void RenderToTargetUAV(ID3D11Device* device, ID3D11DeviceContext* immediateConte
 	immediateContext->CSSetShaderResources(0, 3, srv);
 
 	//For shadow mapping
-	ID3D11ShaderResourceView* srvSpotlightMaps = scenes.at(sceneIndex)->GetShadowMapsSRV(SPOTLIGHT);
-	ID3D11ShaderResourceView* srvDirectionalMaps = scenes.at(sceneIndex)->GetShadowMapsSRV(DIRECTIONAL);
-	ID3D11ShaderResourceView* srvSpotlight = scenes.at(sceneIndex)->GetLightBufferSRV(SPOTLIGHT);
-	ID3D11ShaderResourceView* srvDirectional = scenes.at(sceneIndex)->GetLightBufferSRV(DIRECTIONAL);
+	ID3D11ShaderResourceView* srvSpotlightMaps = scene->GetShadowMapsSRV(SPOTLIGHT);
+	ID3D11ShaderResourceView* srvDirectionalMaps = scene->GetShadowMapsSRV(DIRECTIONAL);
+	ID3D11ShaderResourceView* srvSpotlight = scene->GetLightBufferSRV(SPOTLIGHT);
+	ID3D11ShaderResourceView* srvDirectional = scene->GetLightBufferSRV(DIRECTIONAL);
 	immediateContext->CSSetShaderResources(3, 1, &srvSpotlightMaps);
 	immediateContext->CSSetShaderResources(4, 1, &srvDirectionalMaps);
 	immediateContext->CSSetShaderResources(5, 1, &srvSpotlight);
 	immediateContext->CSSetShaderResources(6, 1, &srvDirectional);
 
-	ID3D11Buffer* nrBuffer = scenes.at(sceneIndex)->GetNrOfLightsBuffer();
+	ID3D11Buffer* nrBuffer = scene->GetNrOfLightsBuffer();
 	immediateContext->CSSetConstantBuffers(1, 1, &nrBuffer);
 
 	immediateContext->Dispatch(WIDTH / 8, HEIGHT / 8, 1);
 
 	immediateContext->CSSetShaderResources(0, 7, SRVnull);
 
-	ID3D11UnorderedAccessView* noUAV = nullptr;
-	immediateContext->CSSetUnorderedAccessViews(uavSlot, 1, &noUAV, nullptr);
+	immediateContext->CSSetUnorderedAccessViews(uavSlot, 1, &UAVnull, nullptr);
 
 }

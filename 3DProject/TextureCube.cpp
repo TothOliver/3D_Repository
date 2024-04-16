@@ -99,7 +99,7 @@ void TextureCube::Initialize(ID3D11Device* device, UINT sideLength, UINT nearZ, 
 			throw std::runtime_error("Could not create texture cube uav");
 		}
 
-		this->cameraCube[i].Initialize(device, pi, {0, 0, 0});
+		this->cameraCube[i].Initialize(device, pi, position);
 		this->cameraCube[i].RotateUp(upAngles[i]);
 		this->cameraCube[i].RotateRight(rightAngles[i]);
 		this->cameraCube[i].UpdateInternalConstantBuffer(immediateContext);
