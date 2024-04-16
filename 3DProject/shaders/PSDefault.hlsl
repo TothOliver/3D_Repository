@@ -27,6 +27,11 @@ cbuffer CameraBuffer : register(b0)
     float4 camPosition;
 };
 
+cbuffer Exponent : register(b1)
+{
+    float specularExponent;
+}
+
 PSOutput main(PixelShaderInput input)
 {
     PSOutput output;
@@ -46,7 +51,7 @@ PSOutput main(PixelShaderInput input)
     //Translate normal map from colour space to coordinate space
     float3 mapNormal = float3(n.x * 2 - 1, n.y * 2 - 1, n.z * 2 - 1);
     
-    output.normal = normalize(float4(mul(mapNormal, tbnMatrix), 0));
+    output.normal = float4(normalize(mul(mapNormal, tbnMatrix)), specularExponent);
     
     //Ambient constant is stored in position.w
     output.position = float4(input.worldPosition.xyz, ambientMap.Sample(textureSampler, parallaxUV).x);

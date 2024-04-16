@@ -35,7 +35,7 @@ private:
 
 public:
 	MeshD3D11() = default;
-	MeshD3D11(ID3D11Device*& device, std::string filename, float worldX = 0, float worldY = 0, float worldZ = 0, float scale = 1, bool reflective = false, UINT reflectionDetail = 512, UINT radius = 0);
+	MeshD3D11(ID3D11Device* device, std::string filename, float worldX = 0, float worldY = 0, float worldZ = 0, float scale = 1, bool reflective = false, UINT reflectionDetail = 512, UINT radius = 0);
 	~MeshD3D11();
 	MeshD3D11(const MeshD3D11 & other) = delete;
 	MeshD3D11& operator=(const MeshD3D11 & other) = delete;

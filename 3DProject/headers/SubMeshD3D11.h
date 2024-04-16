@@ -12,19 +12,17 @@ private:
 
 	Material mat;
 
-	float specularExponent = 1;
+	ID3D11Buffer* specularExponentBuffer;
 
 public:
 	SubMeshD3D11(Material mat, size_t startIndex, size_t nrOfIndicies);
-	~SubMeshD3D11() = default;
+	~SubMeshD3D11();
 	SubMeshD3D11(const SubMeshD3D11& other) = default;
 	SubMeshD3D11& operator=(const SubMeshD3D11& other) = default;
 	SubMeshD3D11(SubMeshD3D11&& other) = default;
 	SubMeshD3D11& operator=(SubMeshD3D11&& other) = default;
 
-	void Initialize(size_t startIndexValue, size_t nrOfIndicesInSubMesh,
-		ID3D11ShaderResourceView* ambientTextureSRV, ID3D11ShaderResourceView* diffuseTextureSRV,
-		ID3D11ShaderResourceView* specularTextureSRV) = delete;
+	void Initialize(ID3D11Device* device);
 
 	void PerformDrawCall(ID3D11DeviceContext* context) const;
 

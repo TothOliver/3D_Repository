@@ -29,6 +29,12 @@ cbuffer CameraBuffer : register(b0)
     float4 camPosition;
 };
 
+//Unused in this version of the pixel shader
+cbuffer Exponent : register(b1)
+{
+    float specularExponent;
+}
+
 PSOutput main(PixelShaderInput input)
 {
     PSOutput output;
@@ -48,7 +54,8 @@ PSOutput main(PixelShaderInput input)
     //Translate normal from colour space
     float3 mapNormal = float3(n.x * 2 - 1, n.y * 2 - 1, n.z * 2 - 1);
     
-    output.normal = normalize(float4(mul(mapNormal, tbnMatrix), 0));
+    //Specular Exponent is constant to avoid artefacts from mtl files
+    output.normal = float4(normalize(mul(mapNormal, tbnMatrix)), 100);
     
     //Calculate direction of reflected view
     float3 R = reflect(normalize(input.worldPosition.xyz - camPosition.xyz), output.normal.xyz);
@@ -58,7 +65,7 @@ PSOutput main(PixelShaderInput input)
     output.position = float4(input.worldPosition.xyz, ambientMap.Sample(textureSampler, parallaxUV).x);
     
     //Specular constant is stored in diffuse.w and reflection is added to colour
-    output.diffuse = float4(/*diffuseMap.Sample(textureSampler, parallaxUV).xyz +*/ reflection.xyz, specularMap.Sample(textureSampler, parallaxUV).x);
+    output.diffuse = float4( /*diffuseMap.Sample(textureSampler, parallaxUV).xyz +*/reflection.xyz, specularMap.Sample(textureSampler, parallaxUV).x);
 
     return output;
 }

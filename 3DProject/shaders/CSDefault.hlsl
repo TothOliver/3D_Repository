@@ -4,7 +4,7 @@ RWTexture2DArray<unorm float4> cubemapUAV : register(u1);
 SamplerState shadowSampler : register(s0);
 
 Texture2D<float4> positionBufferKa : register(t0);
-Texture2D<float4> normalBuffer : register(t1);
+Texture2D<float4> normalBufferNs : register(t1);
 Texture2D<float4> diffuseBufferKs : register(t2);
 
 Texture2DArray<float> SpotshadowMaps : register(t3);
@@ -37,14 +37,14 @@ cbuffer nrOfLightBuffer : register(b1)
 [numthreads(8, 8, 1)]
 void main(uint3 DTid : SV_DispatchThreadID)
 {
-    float4 pixelPosition = float4(positionBufferKa[DTid.xy].xyz, 1);
-    float3 pixelNormal = normalBuffer[DTid.xy].xyz;
+    float4 fragmentPosition = float4(positionBufferKa[DTid.xy].xyz, 1);
+    float3 fragmentNormal = normalBufferNs[DTid.xy].xyz;
 
     float ambientMax = 0;
     
     float4 diffuse = float4(0, 0, 0, 0);
     float4 specular = float4(0, 0, 0, 0);
-    float specularKoefficient = 100;
+    float specularKoefficient = normalBufferNs[DTid.xy].w;
 
     for (int p = 0; p < nrOfSpotLight[0]; p++)
     {
@@ -56,15 +56,15 @@ void main(uint3 DTid : SV_DispatchThreadID)
         float3 h = V + L;
         float3 H = normalize(h / dot(h, h));
 
-        float teta = dot(L, normalBuffer[DTid.xy].xyz);
-        float delta = dot(H, normalBuffer[DTid.xy].xyz);
+        float teta = dot(L, fragmentNormal);
+        float delta = dot(H, fragmentNormal);
         
         float3 D = normalize(SpotLights[p].direction);
         float cosAngle = dot(-L, D);
         float spotEffect = smoothstep(SpotLights[p].angle, 0, acos(cosAngle));
 
         //Calculate fragements if they are in shadow or not
-        float4 shadowCoordinates = mul(float4(pixelPosition.xyz, 1), SpotLights[p].vpMatrix);
+        float4 shadowCoordinates = mul(float4(fragmentPosition.xyz, 1), SpotLights[p].vpMatrix);
         shadowCoordinates.xyz /= shadowCoordinates.w;
         float3 shadowMapUV = float3(shadowCoordinates.x * 0.5f + 0.5, shadowCoordinates.y * -0.5f + 0.5f, p);
         float shadowDepth = SpotshadowMaps.SampleLevel(shadowSampler, shadowMapUV, 0).r + 0.001;
@@ -85,9 +85,9 @@ void main(uint3 DTid : SV_DispatchThreadID)
         
         float3 h = V + D;
         float3 H = normalize(h / dot(h, h));
-        float delta = dot(H, normalBuffer[DTid.xy].xyz);
+        float delta = dot(H, fragmentNormal);
 
-        float4 shadowCoordinates = mul(float4(pixelPosition.xyz, 1), DirectionalLights[d].vpMatrix);
+        float4 shadowCoordinates = mul(float4(fragmentPosition.xyz, 1), DirectionalLights[d].vpMatrix);
         shadowCoordinates.xyz /= shadowCoordinates.w;
         float3 shadowMapUV = float3(shadowCoordinates.x * 0.5f + 0.5, shadowCoordinates.y * -0.5f + 0.5f, d);
         float shadowDepth = DirshadowMaps.SampleLevel(shadowSampler, shadowMapUV, 0).r + 0.01;
@@ -98,7 +98,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
             ambientMax = DirectionalLights[d].intensity[0];
         
         //Diffuse and specular components are stored in the same gbuffer
-        diffuse += shadowFactor * float4(diffuseBufferKs[DTid.xy].xyz, 0) * max(dot(D, normalBuffer[DTid.xy].xyz), 0.0) * DirectionalLights[d].intensity[1];
+        diffuse += shadowFactor * float4(diffuseBufferKs[DTid.xy].xyz, 0) * max(dot(D, fragmentNormal), 0.0) * DirectionalLights[d].intensity[1];
         specular += shadowFactor * float4(1, 1, 1, 0) * diffuseBufferKs[DTid.xy].a * DirectionalLights[d].intensity[2] * pow(saturate(delta), specularKoefficient);
     }
     
