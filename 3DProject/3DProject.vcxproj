@@ -136,8 +136,14 @@
     <FxCompile Include="shaders\CSDefault.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
     </FxCompile>
+    <FxCompile Include="shaders\DSDefault.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Domain</ShaderType>
+    </FxCompile>
     <FxCompile Include="Shaders\GSParticles.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Geometry</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaders\HSDefault.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Hull</ShaderType>
     </FxCompile>
     <FxCompile Include="shaders\PSDefault.hlsl">
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\%(Filename).cso</ObjectFileOutput>
@@ -166,6 +172,7 @@
     <ClInclude Include="headers\ConstantBufferD3D11.h" />
     <ClInclude Include="headers\D3D11Helper.h" />
     <ClInclude Include="headers\DepthBufferD3D11.h" />
+    <ClInclude Include="headers\FrustumCulling.h" />
     <ClInclude Include="headers\GBuffer.h" />
     <ClInclude Include="headers\InputLayoutD3D11.h" />
     <ClInclude Include="headers\LightCollectionD3D11.h" />
@@ -180,19 +187,21 @@
     <ClInclude Include="headers\SceneManager.h" />
     <ClInclude Include="headers\ShaderD3D11.h" />
     <ClInclude Include="headers\ShaderLoader.h" />
-    <ClInclude Include="headers\ShaderResourceTextureD3D11.h" />
+    <ClInclude Include="headers\ShaderResourceD3D11.h" />
     <ClInclude Include="headers\stb_image.h" />
     <ClInclude Include="headers\StructuredBufferD3D11.h" />
     <ClInclude Include="headers\SubMeshD3D11.h" />
     <ClInclude Include="headers\TextureCube.h" />
     <ClInclude Include="headers\VertexBufferD3D11.h" />
     <ClInclude Include="headers\Window.h" />
+    <ClInclude Include="QuadTree.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CameraD3D11.cpp" />
     <ClCompile Include="ConstantBufferD3D11.cpp" />
     <ClCompile Include="D3D11Helper.cpp" />
     <ClCompile Include="DepthBufferD3D11.cpp" />
+    <ClCompile Include="FrustumCulling.cpp" />
     <ClCompile Include="GBuffer.cpp" />
     <ClCompile Include="InputLayoutD3D11.cpp" />
     <ClCompile Include="LightCollectionD3D11.cpp" />

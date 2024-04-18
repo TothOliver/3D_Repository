@@ -23,8 +23,10 @@ void Emitter::Initialize(ID3D11Device* device, UINT nrOfParticles, DirectX::XMFL
 		texData = stbi_load(CONCAT(PATH, "smokeParticle.jpg"), &width, &height, &channels, desiredChannels);
 	else
 		texData = stbi_load(CONCAT(PATH, "rainParticle.jpg"), &width, &height, &channels, desiredChannels);
-	
+
 	this->particleTexture = CreateSRV(device, texData, width, height);
+
+	stbi_image_free(texData);
 
 	std::vector<ParticleData> data;
 	for (size_t i = 0; i < nrOfParticles; i++)

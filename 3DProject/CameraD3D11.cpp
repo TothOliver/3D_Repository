@@ -10,6 +10,8 @@ void CameraD3D11::MoveInDirection(float amount, const DirectX::XMFLOAT3& directi
 	this->position.y += direction.y * amount;
 	this->position.z += direction.z * amount;
 	this->position = { this->position.x, this->position.y, this->position.z };
+
+	//this->translationMatrix = XMMatrixMultiply(translationMatrix, XMMatrixTranslation(direction.x * amount, direction.y * amount, direction.z * amount));
 }
 
 void CameraD3D11::RotateAroundAxis(float amount, const DirectX::XMFLOAT3& axis)
@@ -23,6 +25,8 @@ void CameraD3D11::RotateAroundAxis(float amount, const DirectX::XMFLOAT3& axis)
 	XMStoreFloat3(&this->forward, newForward);
 	XMStoreFloat3(&this->right, newRight);
 	XMStoreFloat3(&this->up, newUp);
+
+	this->rotationMatrix = XMMatrixMultiply(this->rotationMatrix, rotationMatrix);
 }
 
 CameraD3D11::CameraD3D11(ID3D11Device* device, const ProjectionInfo& projectionInfo,
@@ -41,6 +45,8 @@ CameraD3D11::CameraD3D11(const CameraD3D11& other)
 
 void CameraD3D11::Initialize(ID3D11Device* device, const ProjectionInfo& projectionInfo, const DirectX::XMFLOAT3& initialPosition)
 {
+	this->translationMatrix = XMMatrixMultiply(XMMatrixIdentity(), XMMatrixTranslation(initialPosition.x, initialPosition.y, initialPosition.z));
+
 	this->projInfo = projectionInfo;
 	this->position = initialPosition;
 	XMFLOAT4X4 vp;
@@ -128,6 +134,18 @@ ID3D11Buffer* CameraD3D11::GetPositionBuffer() const
 ID3D11Buffer* CameraD3D11::GetOrthBuffer() const
 {
 	return this->orthoBuffer.GetBuffer();
+}
+
+DirectX::XMMATRIX CameraD3D11::GetWorldMatrix() const
+{
+	return XMMatrixMultiply(this->rotationMatrix, this->translationMatrix);
+}
+
+DirectX::XMMATRIX CameraD3D11::GetProjectionMatrix() const
+{
+	XMMATRIX projectionMatrix = XMMatrixPerspectiveFovLH(this->projInfo.fovAngleY, this->projInfo.aspectRatio, this->projInfo.nearZ, this->projInfo.farZ);
+
+	return projectionMatrix;
 }
 
 DirectX::XMFLOAT4X4 CameraD3D11::GetViewProjectionMatrix() const

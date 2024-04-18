@@ -10,8 +10,8 @@
 
 void RenderToTargetUAV(ID3D11Device* device, ID3D11DeviceContext* immediateContext, ID3D11UnorderedAccessView* uav,
 	const UINT WIDTH, const UINT HEIGHT, ID3D11DepthStencilView* dsView, ID3D11InputLayout* inputLayout, ID3D11SamplerState* sampler,
-	D3D11_VIEWPORT viewport, ID3D11Buffer* vpBuffer, ID3D11Buffer* cameraPosition, Scene* scene, int uavSlot,
-	ShaderD3D11& vs, ShaderD3D11& cs, ShaderD3D11 ps[2], ShaderD3D11 particleShaders[4])
+	D3D11_VIEWPORT viewport, ID3D11Buffer* vpBuffer, ID3D11Buffer* cameraPosition, CameraD3D11* camera, Scene* scene, int uavSlot,
+	ShaderD3D11& vs, ShaderD3D11& cs, ShaderD3D11 ps[2], ShaderD3D11 particleShaders[4], ShaderD3D11& hs, ShaderD3D11& ds)
 {
 	ID3D11RenderTargetView* rtv[3];
 	ID3D11ShaderResourceView* srv[3];
@@ -80,22 +80,22 @@ void RenderToTargetUAV(ID3D11Device* device, ID3D11DeviceContext* immediateConte
 		immediateContext->VSSetShaderResources(0, 1, &nullSRV);
 	}
 
-	//Bind the shaders for the main render
+	//Bind the shaders for the main render //Hull, domain and pixel shaders are set depending on mesh attributes
 	vs.BindShader(immediateContext);
 	cs.BindShader(immediateContext);
+
+	immediateContext->DSSetConstantBuffers(0, 1, &vpBuffer);
 
 	immediateContext->VSSetConstantBuffers(1, 1, &vpBuffer);
 
 	immediateContext->IASetInputLayout(inputLayout);
-	immediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
 
 	immediateContext->PSSetConstantBuffers(0, 1, &cameraPosition);
 
 	immediateContext->RSSetViewports(1, &viewport);
 
 	immediateContext->OMSetRenderTargets(3, rtv, dsView);
-	scene->DrawScene(immediateContext, ps, false);
+	scene->DrawScene(immediateContext, ps, hs, ds, false, camera);
 	immediateContext->OMSetRenderTargets(3, RTVnull, nullptr);
 
 

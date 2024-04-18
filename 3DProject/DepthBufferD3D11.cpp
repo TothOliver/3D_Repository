@@ -33,7 +33,7 @@ void DepthBufferD3D11::Initialize(ID3D11Device* device, UINT width, UINT height,
 	textureDesc.MiscFlags = 0;
 
 	if (FAILED(device->CreateTexture2D(&textureDesc, nullptr, &this->texture))) {
-		throw ("ojoj");
+		throw ("Failed to create depth buffer texture");
 	}
 
 
@@ -53,13 +53,14 @@ void DepthBufferD3D11::Initialize(ID3D11Device* device, UINT width, UINT height,
 		dsvDesc.Texture2DArray.FirstArraySlice = dsvIndex;
 
 		if (FAILED(device->CreateDepthStencilView(this->texture, &dsvDesc, &this->depthStencilViews[dsvIndex]))){
-			throw ("wawa");
+			throw ("Failed to create DepthStencilView");
 		}
 	}
 
 	if (!hasSRV) 
 	{
 		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+		
 		ZeroMemory(&srvDesc, sizeof(srvDesc));
 		srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
 		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
@@ -69,7 +70,7 @@ void DepthBufferD3D11::Initialize(ID3D11Device* device, UINT width, UINT height,
 		srvDesc.Texture2DArray.ArraySize = arraySize;
 
 		if (FAILED(device->CreateShaderResourceView(this->texture, &srvDesc, &this->srv))) {
-			printf("wowo");
+			printf("Failed to create ShaderResourceView");
 		}
 	}
 

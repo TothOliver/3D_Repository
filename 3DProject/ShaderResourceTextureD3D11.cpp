@@ -1,64 +1,100 @@
-#include "headers/ShaderResourceTextureD3D11.h"
+#include "headers/ShaderResourceD3D11.h"
 #include "headers/stb_image.h"
 
 
-ShaderResourceTextureD3D11::ShaderResourceTextureD3D11(ID3D11Device* device, UINT width, UINT height, void* textureData)
+ShaderResourceD3D11::ShaderResourceD3D11(ID3D11Device* device, UINT width, UINT height, void* textureData)
 {
+	Initialize(device, width, height, textureData);
 }
 
-ShaderResourceTextureD3D11::ShaderResourceTextureD3D11(ID3D11Device* device, const char* pathToTextureFile)
+ShaderResourceD3D11::ShaderResourceD3D11(ID3D11Device* device, const char* pathToTextureFile)
 {
 	Initialize(device, pathToTextureFile);
 }
 
-ShaderResourceTextureD3D11::~ShaderResourceTextureD3D11()
+ShaderResourceD3D11::~ShaderResourceD3D11()
 {
-	//this->texture->Release();
-	//this->srv->Release();
+	if (this->srv != nullptr)
+		this->srv->Release();
 }
 
-void ShaderResourceTextureD3D11::Initialize(ID3D11Device* device, UINT width, UINT height, void* textureData)
+void ShaderResourceD3D11::Initialize(ID3D11Device* device, UINT width, UINT height, void* textureData)
 {
+	ID3D11Texture2D* texture;
+
+	D3D11_SUBRESOURCE_DATA texData;
+	texData.pSysMem = textureData;
+	texData.SysMemPitch = 4 * width;
+	texData.SysMemSlicePitch = 0;
+
+	D3D11_TEXTURE2D_DESC texDesc;
+	texDesc.Width = width;
+	texDesc.Height = height;
+	texDesc.MipLevels = 1;
+	texDesc.ArraySize = 1;
+	texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	texDesc.SampleDesc.Count = 1;
+	texDesc.SampleDesc.Quality = 0;
+	texDesc.Usage = D3D11_USAGE_IMMUTABLE;
+	texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	texDesc.CPUAccessFlags = 0;
+	texDesc.MiscFlags = 0;
+
+	if (FAILED(device->CreateTexture2D(&texDesc, &texData, &texture))) {
+		throw "Failed to create Texture";
+	}
+
+	if (FAILED(device->CreateShaderResourceView(texture, nullptr, &srv))) {
+		throw "Failed to create ShaderResourceView";
+	}
+
+	texture->Release();
 }
 
-void ShaderResourceTextureD3D11::Initialize(ID3D11Device* device, const char* pathToTextureFile)
+void ShaderResourceD3D11::Initialize(ID3D11Device* device, const char* pathToTextureFile)
 {
+	ID3D11Texture2D* texture;
+
+	stbi_set_flip_vertically_on_load(true);
+
 	int width;
 	int height;
 	int channels;
 	int desireChannels = 4;
 
-	unsigned char* image = stbi_load(pathToTextureFile, &width, &height, &channels, desireChannels);
+	unsigned char* imageData = stbi_load(pathToTextureFile, &width, &height, &channels, desireChannels);
 
-	D3D11_SUBRESOURCE_DATA imagedata;
-	imagedata.pSysMem = image;
-	imagedata.SysMemPitch = desireChannels * width;
-	imagedata.SysMemSlicePitch = 0;
+	D3D11_SUBRESOURCE_DATA texData;
+	texData.pSysMem = imageData;
+	texData.SysMemPitch = 4 * width;
+	texData.SysMemSlicePitch = 0;
 
-	D3D11_TEXTURE2D_DESC texture;
-	texture.Width = width;
-	texture.Height = height;
-	texture.MipLevels = 1;
-	texture.ArraySize = 1;
-	texture.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	texture.SampleDesc.Count = 1;
-	texture.SampleDesc.Quality = 0;
-	texture.Usage = D3D11_USAGE_IMMUTABLE;
-	texture.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-	texture.CPUAccessFlags = 0;
-	texture.MiscFlags = 0;
+	D3D11_TEXTURE2D_DESC texDesc;
+	texDesc.Width = width;
+	texDesc.Height = height;
+	texDesc.MipLevels = 1;
+	texDesc.ArraySize = 1;
+	texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	texDesc.SampleDesc.Count = 1;
+	texDesc.SampleDesc.Quality = 0;
+	texDesc.Usage = D3D11_USAGE_IMMUTABLE;
+	texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	texDesc.CPUAccessFlags = 0;
+	texDesc.MiscFlags = 0;
 
-	if (FAILED(device->CreateTexture2D(&texture, &imagedata, &this->texture))) {
-		printf("oj");
+	if (FAILED(device->CreateTexture2D(&texDesc, &texData, &texture))) {
+		throw "Failed to create Texture";
 	}
 
-	if(this->texture != 0)
-		if (FAILED(device->CreateShaderResourceView(this->texture, nullptr, &srv))) {
-			printf("oj");
-		}
+	if (FAILED(device->CreateShaderResourceView(texture, nullptr, &srv))) {
+		throw "Failed to create ShaderResourceView";
+	}
+
+	stbi_image_free(imageData);
+	texture->Release();
 }
 
-ID3D11ShaderResourceView* ShaderResourceTextureD3D11::GetSRV() const
+ID3D11ShaderResourceView* ShaderResourceD3D11::GetSRV() const
 {
 	return this->srv;
 }

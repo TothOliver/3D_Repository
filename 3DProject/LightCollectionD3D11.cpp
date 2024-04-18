@@ -1,10 +1,10 @@
 #include "headers/LightCollectionD3D11.h"
 
-
 LightCollectionD3D11::~LightCollectionD3D11()
 {
 	for (int i = 0; i < shadowCameras.size(); i++) {
-		shadowCameras[i]->~CameraD3D11();
+		delete shadowCameras[i];
+		shadowCameras[i] = nullptr;
 	}
 }
 

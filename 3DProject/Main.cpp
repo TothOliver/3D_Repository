@@ -18,6 +18,7 @@
 #include <DirectXMath.h>
 #include "headers/Render.h"
 #include "headers/TextureCube.h"
+#include "headers/ShaderResourceD3D11.h"
 #include <chrono>
 
 #define CAMERA_SPEED 6
@@ -28,6 +29,7 @@ using namespace DirectX;
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
+
 	const UINT WIDTH = 1024;
 	const UINT HEIGHT = 576;
 	HWND window;
@@ -52,6 +54,31 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		return -1;
 	}
 
+
+	//#####################################################
+	//TEMPORARY SECTION FOR DEBUGGING TESSELLATION
+	ID3D11RasterizerState* rsState;
+	D3D11_RASTERIZER_DESC rsDesc;
+
+	rsDesc.CullMode = D3D11_CULL_BACK;
+	rsDesc.FillMode = D3D11_FILL_SOLID;
+	rsDesc.FrontCounterClockwise = false;
+	rsDesc.DepthBias = 0.0f;
+	rsDesc.DepthBiasClamp = 0.0f;
+	rsDesc.SlopeScaledDepthBias = 0.0f;
+	rsDesc.DepthClipEnable = false;
+	rsDesc.ScissorEnable = false;
+	rsDesc.MultisampleEnable = false;
+	rsDesc.AntialiasedLineEnable = false;
+
+	HRESULT hr = device->CreateRasterizerState(&rsDesc, &rsState);
+
+	if (FAILED(hr))
+		throw "oops";
+
+	immediateContext->RSSetState(rsState);
+	//#####################################################
+
 	ShaderD3D11 vertexShader;
 	ShaderD3D11 computeShader;
 	InputLayoutD3D11 inputLayout;
@@ -60,6 +87,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 	ShaderD3D11 ps[2];
 	ShaderD3D11 particleShaders[4];
+	ShaderD3D11 hullShader;
+	ShaderD3D11 domainShader;
 
 	//Initialize camera with desired values
 	CameraD3D11 camera;
@@ -73,15 +102,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	ShowCursor(false);
 	GetWindowRect(window, lpRect);
 
-	if (!ShaderLoader(device, immediateContext, vertexShader, computeShader, ps, particleShaders, inputLayout, textureSampler, shadowSampler))
+	if (!ShaderLoader(device, immediateContext, vertexShader, computeShader, ps, particleShaders, inputLayout, textureSampler, shadowSampler, hullShader, domainShader))
 	{
 		std::cerr << "Error: SetupD3D11" << std::endl;
 		return -1;
 	}
 
+	ID3D11SamplerState* sssstampler = textureSampler.GetSamplerState();
+	immediateContext->DSSetSamplers(0, 1, &sssstampler);
+
 	std::vector<Scene*> scenes;
 	CreateScenes(device, scenes);
-	int sceneIndex = 2;
+	int sceneIndex = 0;
 
 	float deltaTime = 1;
 
@@ -184,7 +216,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 			ID3D11Buffer* cameraConstantBuffer = currentScene->GetLightCameraConstantBuffer(SPOTLIGHT, lightIndex);
 			immediateContext->VSSetConstantBuffers(1, 1, &cameraConstantBuffer);
 
-			currentScene->DrawScene(immediateContext, nullptr, true);
+			currentScene->DrawScene(immediateContext, nullptr, hullShader, domainShader, true, &camera);
 
 			dsv = nullptr;
 			immediateContext->OMSetRenderTargets(0, nullptr, dsv);
@@ -197,10 +229,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 			immediateContext->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
 			immediateContext->OMSetRenderTargets(0, nullptr, dsv);
 
-			ID3D11Buffer* cameraConstantBuffer = currentScene->GetLightCameraConstantBuffer(DIRECTIONAL, lightIndex); //new
+			ID3D11Buffer* cameraConstantBuffer = currentScene->GetLightCameraConstantBuffer(DIRECTIONAL, lightIndex);
 			immediateContext->VSSetConstantBuffers(1, 1, &cameraConstantBuffer);
 
-			currentScene->DrawScene(immediateContext, nullptr, true);
+			currentScene->DrawScene(immediateContext, nullptr, hullShader, domainShader, true, &camera);
 
 			dsv = nullptr;
 			immediateContext->OMSetRenderTargets(0, nullptr, dsv);
@@ -221,14 +253,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 				{
 					RenderToTargetUAV(device, immediateContext, cubeMap->GetCubeUAV(side), cubeMap->GetCubeSideLength(), cubeMap->GetCubeSideLength(),
 						cubeMap->GetCubeDSV(), inputLayout.GetInputLayout(), textureSampler.GetSamplerState(), cubeMap->GetCubeViewport(), cubeMap->GetCameraVPBuffer(side),
-						cubeMap->GetCameraPOSBuffer(side), currentScene, 1, vertexShader, computeShader, ps, particleShaders);
+						cubeMap->GetCameraPOSBuffer(side), &camera, currentScene, 1, vertexShader, computeShader, ps, particleShaders, hullShader, domainShader);
 				}
 			}
 		}
 
 		//Render scene at sceneIndex
 		RenderToTargetUAV(device, immediateContext, uav, WIDTH, HEIGHT, dsView, inputLayout.GetInputLayout(), 
-			textureSampler.GetSamplerState(), viewport, camera.GetVPBuffer(), camera.GetPositionBuffer(), currentScene, 0, vertexShader, computeShader, ps, particleShaders);
+			textureSampler.GetSamplerState(), viewport, camera.GetVPBuffer(), camera.GetPositionBuffer(), &camera, currentScene, 0, vertexShader, computeShader, ps, particleShaders,
+			hullShader, domainShader);
 
 		immediateContext->PSSetShader(nullptr, nullptr, 0);
 
@@ -254,10 +287,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	swapChain->Release();
 	dsView->Release();
 	uav->Release();
+	rsState->Release();
 
 	for (size_t i = 0; i < scenes.size(); i++)
 	{
-		scenes.at(i)->~Scene();
+		delete scenes.at(i);
+		scenes.at(i) = nullptr;
 	}
 
 	return true;

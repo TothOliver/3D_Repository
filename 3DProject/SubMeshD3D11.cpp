@@ -34,7 +34,7 @@ void SubMeshD3D11::Initialize(ID3D11Device* device)
 	device->CreateBuffer(&bDesc, &bData, &this->specularExponentBuffer);
 }
 
-void SubMeshD3D11::PerformDrawCall(ID3D11DeviceContext* immediateContext) const
+void SubMeshD3D11::PerformDrawCall(ID3D11DeviceContext* immediateContext, bool displace) const
 {
 
 	ID3D11ShaderResourceView* srvs[5];
@@ -44,7 +44,15 @@ void SubMeshD3D11::PerformDrawCall(ID3D11DeviceContext* immediateContext) const
 	srvs[3] = this->mat.normalTexture;
 	srvs[4] = this->mat.heightTexture;
 
+	//Will be nullptr if displacement mapping is enabled
+	ID3D11ShaderResourceView* heightSRV = this->mat.heightTexture;
+	
 	immediateContext->PSSetShaderResources(0, 5, srvs);
+
+	if (displace) {
+		ID3D11ShaderResourceView* null = nullptr;
+		immediateContext->PSSetShaderResources(4, 1, &null);
+	}
 
 	ID3D11Buffer* buf = this->specularExponentBuffer;
 	immediateContext->PSSetConstantBuffers(1, 1, &buf);

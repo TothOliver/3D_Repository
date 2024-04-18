@@ -1,7 +1,8 @@
 #include "headers/ShaderLoader.h"
 
 
-bool CreateShaders(ID3D11Device* device, ID3D11DeviceContext* context, ShaderD3D11& vertexShader, ShaderD3D11& computeShader, ShaderD3D11 pixelShaders[2], ShaderD3D11 particleShaders[4], InputLayoutD3D11& inputLayout)
+bool CreateShaders(ID3D11Device* device, ID3D11DeviceContext* context, ShaderD3D11& vertexShader, ShaderD3D11& computeShader, ShaderD3D11 pixelShaders[2], 
+    ShaderD3D11 particleShaders[4], ShaderD3D11& hs, ShaderD3D11& ds)
 {
     vertexShader.Initialize(device, ShaderType::VERTEX_SHADER, "shaders/VSDefault.cso");
     pixelShaders[0].Initialize(device, ShaderType::PIXEL_SHADER, "shaders/PSDefault.cso");
@@ -12,6 +13,9 @@ bool CreateShaders(ID3D11Device* device, ID3D11DeviceContext* context, ShaderD3D
     particleShaders[1].Initialize(device, ShaderType::VERTEX_SHADER, "shaders/VSParticles.cso");
     particleShaders[2].Initialize(device, ShaderType::GEOMETRY_SHADER, "shaders/GSParticles.cso");
     particleShaders[3].Initialize(device, ShaderType::PIXEL_SHADER, "shaders/PSParticles.cso");
+
+    hs.Initialize(device, ShaderType::HULL_SHADER, "shaders/HSDefault.cso");
+    ds.Initialize(device, ShaderType::DOMAIN_SHADER, "shaders/DSDefault.cso");
 
     return true;
 }
@@ -38,10 +42,10 @@ bool CreateSampler(ID3D11Device* device, SamplerD3D11& sampler, SamplerD3D11& sh
 }
 
 bool ShaderLoader(ID3D11Device* device, ID3D11DeviceContext* context, ShaderD3D11& vertexShader, ShaderD3D11& computeShader, ShaderD3D11 pixelShaders[2], ShaderD3D11 particleShaders[4],
-    InputLayoutD3D11& inputLayout, SamplerD3D11& textureSampler, SamplerD3D11& shadowSampler)
+    InputLayoutD3D11& inputLayout, SamplerD3D11& textureSampler, SamplerD3D11& shadowSampler, ShaderD3D11& hs, ShaderD3D11& ds)
 {
 
-    CreateShaders(device, context, vertexShader, computeShader, pixelShaders, particleShaders, inputLayout);
+    CreateShaders(device, context, vertexShader, computeShader, pixelShaders, particleShaders, hs, ds);
     CreateInputLayout(inputLayout, device, vertexShader);
     CreateSampler(device, textureSampler, shadowSampler);
 

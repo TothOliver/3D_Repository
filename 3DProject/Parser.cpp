@@ -75,18 +75,23 @@ void CreateDefaultMat(ID3D11Device*& device, Material& newMat)
 
 	textureData = stbi_load(CONCAT(PATH, DEFAULT), &width, &height, &channels, COLOUR_CHANNELS);
 	newMat.ambientTexture = CreateSRV(device, textureData, width, height);
+	stbi_image_free(textureData);
 
 	textureData = stbi_load(CONCAT(PATH, DEFAULT), &width, &height, &channels, COLOUR_CHANNELS);
 	newMat.diffuseTexture = CreateSRV(device, textureData, width, height);
+	stbi_image_free(textureData);
 
 	textureData = stbi_load(CONCAT(PATH, DEFAULT), &width, &height, &channels, COLOUR_CHANNELS);
 	newMat.specularTexture = CreateSRV(device, textureData, width, height);
+	stbi_image_free(textureData);
 
 	textureData = stbi_load(CONCAT(PATH, "defaultHeight.png"), &width, &height, &channels, COLOUR_CHANNELS);
 	newMat.heightTexture = CreateSRV(device, textureData, width, height);
+	stbi_image_free(textureData);
 
 	textureData = stbi_load(CONCAT(PATH, "defaultNormal.png"), &width, &height, &channels, COLOUR_CHANNELS);
 	newMat.normalTexture = CreateSRV(device, textureData, width, height);
+	stbi_image_free(textureData);
 
 	newMat.name = "default";
 }
@@ -128,7 +133,8 @@ void InsertTangents(std::vector<float>& verticies)
 	return;
 }
 
-int ParseObj(ID3D11Device* &device, std::string filename, std::vector<float>& vertexbuffer, std::vector<uint32_t>& indexbuffer, std::vector<SubMeshD3D11*>& submeshes, std::vector<Material>& materials)
+int ParseObj(ID3D11Device* &device, std::string filename, std::vector<float>& vertexbuffer, std::vector<uint32_t>& indexbuffer, 
+	std::vector<SubMeshD3D11*>& submeshes, std::vector<Material>& materials, BoundingBoxPositions& bbp)
 //Parses OBJ file and its MTL file if it exists
 {
 	stbi_set_flip_vertically_on_load(true);
@@ -152,6 +158,9 @@ int ParseObj(ID3D11Device* &device, std::string filename, std::vector<float>& ve
 	}
 
 	std::string line;
+	size_t p = 0;
+	XMFLOAT3 max = { NULL, NULL, NULL };
+	XMFLOAT3 min = { NULL, NULL, NULL };
 
 	while (std::getline(file, line))
 	{
@@ -167,6 +176,14 @@ int ParseObj(ID3D11Device* &device, std::string filename, std::vector<float>& ve
 			positions.push_back(std::stof(line.substr(index1, index2 - index1)));
 			
 			positions.push_back(std::stof(line.substr(index2, line.length() - index2)));
+
+			//Calculate points for boundingbox 
+			min = CalculateBoundingBoxPointsMin(positions[p], positions[p + 1], positions[p + 2], min.x, min.y, min.z);
+			max = CalculateBoundingBoxPointsMax(positions[p], positions[p + 1], positions[p + 2], max.x, max.y, max.z);
+			p += 3;
+
+			bbp.pos1 = XMLoadFloat3(&min);
+			bbp.pos2 = XMLoadFloat3(&max);
 		}
 
 		//Verticy Normals
@@ -356,7 +373,7 @@ int ParseMtl(ID3D11Device* &device, std::string filename, std::vector<Material>&
 			newMat.name = matName;
 
 			int width, height, channels;
-			unsigned char* textureData;
+			unsigned char* textureData = nullptr;
 
 			while (std::getline(mtlFile, line))
 			{
@@ -364,26 +381,31 @@ int ParseMtl(ID3D11Device* &device, std::string filename, std::vector<Material>&
 				{
 					textureData = stbi_load((PATH + line.substr(7, line.length() - 7)).c_str(), &width, &height, &channels, COLOUR_CHANNELS);
 					newMat.ambientTexture = CreateSRV(device, textureData, width, height);
+					stbi_image_free(textureData);
 				}
 				else if (line.substr(0, 6) == "map_Kd")
 				{
 					textureData = stbi_load((PATH + line.substr(7, line.length() - 7)).c_str(), &width, &height, &channels, COLOUR_CHANNELS);
 					newMat.diffuseTexture = CreateSRV(device, textureData, width, height);
+					stbi_image_free(textureData);
 				}
 				else if (line.substr(0, 6) == "map_Ks")
 				{
 					textureData = stbi_load((PATH + line.substr(7, line.length() - 7)).c_str(), &width, &height, &channels, COLOUR_CHANNELS);
 					newMat.specularTexture = CreateSRV(device, textureData, width, height);
+					stbi_image_free(textureData);
 				}
 				else if (line.substr(0, 6) == "map_Kn")
 				{
 					textureData = stbi_load((PATH + line.substr(7, line.length() - 7)).c_str(), &width, &height, &channels, COLOUR_CHANNELS);
 					newMat.normalTexture = CreateSRV(device, textureData, width, height);
+					stbi_image_free(textureData);
 				}
 				else if (line.substr(0, 6) == "map_Kh")
 				{
 					textureData = stbi_load((PATH + line.substr(7, line.length() - 7)).c_str(), &width, &height, &channels, COLOUR_CHANNELS);
 					newMat.heightTexture = CreateSRV(device, textureData, width, height);
+					stbi_image_free(textureData);
 				}
 				else if (line.substr(0, 2) == "Ns")
 				{
@@ -400,26 +422,31 @@ int ParseMtl(ID3D11Device* &device, std::string filename, std::vector<Material>&
 			{
 				textureData = stbi_load(CONCAT(PATH, DEFAULT), &width, &height, &channels, COLOUR_CHANNELS);
 				newMat.ambientTexture = CreateSRV(device, textureData, width, height);
+				stbi_image_free(textureData);
 			}
 			if (newMat.diffuseTexture == nullptr)
 			{
 				textureData = stbi_load(CONCAT(PATH, DEFAULT), &width, &height, &channels, COLOUR_CHANNELS);
 				newMat.diffuseTexture = CreateSRV(device, textureData, width, height);
+				stbi_image_free(textureData);
 			}
 			if (newMat.specularTexture == nullptr)
 			{
 				textureData = stbi_load(CONCAT(PATH, "defaultSpecular.png"), &width, &height, &channels, COLOUR_CHANNELS);
 				newMat.specularTexture = CreateSRV(device, textureData, width, height);
+				stbi_image_free(textureData);
 			}
 			if (newMat.heightTexture == nullptr)
 			{
 				textureData = stbi_load(CONCAT(PATH, "defaultHeight.png"), &width, &height, &channels, COLOUR_CHANNELS);
 				newMat.heightTexture = CreateSRV(device, textureData, width, height);
+				stbi_image_free(textureData);
 			}
 			if (newMat.normalTexture == nullptr)
 			{
 				textureData = stbi_load(CONCAT(PATH, "defaultNormal.png"), &width, &height, &channels, COLOUR_CHANNELS);
 				newMat.normalTexture = CreateSRV(device, textureData, width, height);
+				stbi_image_free(textureData);
 			}
 			
 			materials.push_back(newMat);

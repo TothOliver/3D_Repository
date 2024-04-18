@@ -6,7 +6,7 @@ Scene::~Scene()
 	{
 		if (this->objectsInScene.at(i) != nullptr)
 		{
-			this->objectsInScene.at(i)->~MeshD3D11();
+			delete this->objectsInScene.at(i);
 			this->objectsInScene.at(i) = nullptr;
 		}
 	}
@@ -18,39 +18,61 @@ Scene::~Scene()
 	}
 }
 
-void Scene::DrawScene(ID3D11DeviceContext*& immediateContext, ShaderD3D11 ps[2], bool shadowMapping)
+void Scene::DrawScene(ID3D11DeviceContext*& immediateContext, ShaderD3D11 ps[2], ShaderD3D11& hs, ShaderD3D11& ds, bool shadowMapping, CameraD3D11* camera)
 //Draw all objects in the scene
 {
+
+	std::vector<const MeshD3D11*> objects = quadTree.GetObjectsArray(camera);
+
+	//Unbind hull and domain shader and reset Primitive topology
+	immediateContext->HSSetShader(nullptr, nullptr, 0);
+	immediateContext->DSSetShader(nullptr, nullptr, 0);
+	immediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 	if (!shadowMapping)
 	{
-		for (size_t i = 0; i < this->objectsInScene.size(); i++)
+		for (size_t i = 0; i < objects.size(); i++)
 		{
+
+			if (objects.at(i)->IsDisplaced()) {
+				ID3D11Buffer* meshPosBuffer = objects.at(i)->GetMeshCenterBuffer();
+				ID3D11Buffer* cameraBuffer = camera->GetPositionBuffer();
+				immediateContext->HSSetConstantBuffers(0, 1, &cameraBuffer);
+				immediateContext->HSSetConstantBuffers(1, 1, &meshPosBuffer);
+
+				hs.BindShader(immediateContext);
+				ds.BindShader(immediateContext);
+				immediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
+			}
+
 			ID3D11ShaderResourceView* srv;
-			if (this->objectsInScene.at(i)->IsReflective())
+			if (objects.at(i)->IsReflective())
 			{
 				//PSReflections
 				ps[1].BindShader(immediateContext);
-				srv = this->objectsInScene.at(i)->GetTextureCube()->GetCubeSRV();
+				srv = objects.at(i)->GetTextureCube()->GetCubeSRV();
 				immediateContext->PSSetShaderResources(5, 1, &srv);
 			}
 			else //Regular Pixel Shader
 				ps[0].BindShader(immediateContext);
 
-			this->objectsInScene.at(i)->BindMeshBuffers(immediateContext);
+			objects.at(i)->BindMeshBuffers(immediateContext);
 			srv = nullptr;
 			immediateContext->PSSetShaderResources(5, 1, &srv);
 		}
 	}
 	else
-		for (size_t i = 0; i < this->objectsInScene.size(); i++)
-			this->objectsInScene.at(i)->BindMeshBuffers(immediateContext);
+		for (size_t i = 0; i < objects.size(); i++)
+			objects.at(i)->BindMeshBuffers(immediateContext);
 
 }
 
 void Scene::AddObject(MeshD3D11*& object)
 {
 	this->objectsInScene.push_back(object);
+	quadTree.CreateObjectBoundingBox(object);
 }
+
 
 int Scene::GetNrOfMeshes() const
 {
@@ -145,4 +167,9 @@ UINT Scene::GetEmitterCount() const
 Emitter* Scene::GetEmitterAt(UINT index) const
 {
 	return this->emitters.at(index);
+}
+
+void Scene::CreateQuadTree()
+{
+	quadTree.CreateSceneBoundingBox();
 }
