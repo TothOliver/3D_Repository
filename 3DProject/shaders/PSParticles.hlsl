@@ -20,7 +20,7 @@ PSOutput main(PixelShaderInput input)
     PSOutput output;
 
     output.position = float4(input.position.xyz, 1);
-    output.normal = float4(0, 0, 0, 0);
+    output.normal = float4(0, 0, 0, 1);
     output.colour = particleTexture.Sample(textureSampler, input.uv);
 
     return output;

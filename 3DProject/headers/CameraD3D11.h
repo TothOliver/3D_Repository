@@ -23,6 +23,9 @@ private:
 	DirectX::XMFLOAT3 up = { 0.0f, 1.0f, 0.0f };
 	ProjectionInfo projInfo;
 
+	DirectX::XMMATRIX translationMatrix;
+	DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixIdentity();
+
 	ConstantBufferD3D11 cameraBuffer;
 	ConstantBufferD3D11 positionBuffer;
 	ConstantBufferD3D11 orthoBuffer;
@@ -59,6 +62,8 @@ public:
 	ID3D11Buffer* GetPositionBuffer() const;
 	ID3D11Buffer* GetOrthBuffer() const;
 
+	DirectX::XMMATRIX GetWorldMatrix() const;
+	DirectX::XMMATRIX GetProjectionMatrix() const;
 	DirectX::XMFLOAT4X4 GetViewProjectionMatrix() const;
 	DirectX::XMFLOAT4X4 GetOrthMatrix(ProjectionInfo projectionInfo) const;
 };

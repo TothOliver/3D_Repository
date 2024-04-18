@@ -4,8 +4,6 @@
 #include <iostream>
 #include <vector>
 
-#include "ShaderResourceTextureD3D11.h"
-
 class DepthBufferD3D11
 {
 private:

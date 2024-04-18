@@ -24,7 +24,7 @@ public:
 
 	void Initialize(ID3D11Device* device);
 
-	void PerformDrawCall(ID3D11DeviceContext* context) const;
+	void PerformDrawCall(ID3D11DeviceContext* context, bool displace) const;
 
 	ID3D11ShaderResourceView* GetAmbientSRV() const;
 	ID3D11ShaderResourceView* GetDiffuseSRV() const;

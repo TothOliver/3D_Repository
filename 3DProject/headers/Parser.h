@@ -3,12 +3,14 @@
 #include <d3d11.h>
 #include <string>
 #include <vector>
+#include "MeshD3D11.h"
 #include "SubMeshD3D11.h"
 #include "Material.h"
 
 
 
-int ParseObj(ID3D11Device*& device, std::string filename, std::vector<float>& vertexbuffer, std::vector<uint32_t>& indexbuffer, std::vector<SubMeshD3D11*>& submeshes, std::vector<Material>& materials);
+int ParseObj(ID3D11Device*& device, std::string filename, std::vector<float>& vertexbuffer, std::vector<uint32_t>& indexbuffer, 
+	std::vector<SubMeshD3D11*>& submeshes, std::vector<Material>& materials, BoundingBoxPositions& bbp);
 
 int ParseMtl(ID3D11Device* &device, std::string filename, std::vector<Material>& materials);
 
