@@ -1,0 +1,6 @@
+newmtl foam
+map_Kn foamNormal.jpg
+map_Kd foamDiffuse.jpg
+map_Kh foamHeight.jpg
+map_Ka foamAmbient.jpg
+Ns 10

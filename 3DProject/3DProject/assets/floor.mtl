@@ -1,0 +1,9 @@
+# Blender 4.1.0 MTL File: 'None'
+# www.blender.org
+
+newmtl Material_#25
+map_Ka floor ambient.png
+map_Kd floor diffuse.png
+map_Ks floor specular.png
+map_Kh floor height.png
+map_Kn floor normal.png
